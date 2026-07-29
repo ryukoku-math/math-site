@@ -10,11 +10,18 @@ export async function onRequest(context) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+
   try {
     const originResponse = await fetch(originUrl, {
       method: request.method,
       headers: request.headers,
-      body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
+      body: hasBody ? request.body : undefined,
+      // Cloudflare Workers' fetch() throws synchronously when forwarding a
+      // streamed request body (POST/PUT/etc.) without this — the error was
+      // silently swallowed by the catch block below and fell through to the
+      // static fallback, which has no /api/ask route and returned 405.
+      duplex: hasBody ? "half" : undefined,
       signal: controller.signal,
     });
     clearTimeout(timeout);
