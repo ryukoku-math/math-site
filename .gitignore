@@ -1,0 +1,7 @@
+.blume/
+dist/
+.env
+node_modules/
+.blume-verify/
+.DS_Store
+CLAUDE.md

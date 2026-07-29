@@ -1,0 +1,14 @@
+---
+title: "「畳込みニューラルネットで抽出した画像特徴を用いたFace Verification」"
+authors: "丈達生伍"
+seo:
+  description: "本研究では、人物の画像から顔を識別する手法である Face Verification と呼ばれるものについて検討した。Face Verification…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究では、人物の画像から顔を識別する手法である Face Verification と呼ばれるものについて検討した。Face Verification とは、2つの顔の画像が同じ人同士のものか違う人同士のものかを識別する手法である。2つの顔画像の特徴量の間の距離を測り、あらかじめ定められた閾値より大きい値であれば違う人同士、さもなくば同じ人同士であると識別する。この手法は、2つの特徴の一方に既知の人物のデータ、もう一方に未知の人物のデータというペアを与えることで、その人物を特定する(または既知の誰でもないと判定する)のに使える。さらに本研究では、同じ人同士の距離を小さく、違う人同士の距離を大きくするように特徴量を線形変換する手法を組み合わせて精度を向上させることも試みた。この手法の性能を調べるために、LFW という、5749人の顔画像13233枚のデータセットを用いて、Face Verification の実験を行った。その結果、特徴量の線形変換無しでは識別率は90.8%となった。 特徴量の線形変換後は98.5%となった。
+
+<SlideGallery images={["/images/awards/2016/undergrad-fc793c/01.png","/images/awards/2016/undergrad-fc793c/02.png","/images/awards/2016/undergrad-fc793c/03.png","/images/awards/2016/undergrad-fc793c/04.png","/images/awards/2016/undergrad-fc793c/05.png","/images/awards/2016/undergrad-fc793c/06.png"]} />
+

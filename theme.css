@@ -1,0 +1,122 @@
+/*
+ * Consolidate both sidebars (primary nav + table of contents) onto the right,
+ * stacked vertically in one column, matching the blume-slab layout. Blume's
+ * grid is [nav][content][toc] (nav fixed-width, content flexible, toc
+ * fixed-width at xl); collapse it to [content][right-rail] and place nav +
+ * toc into the same right-hand grid column, one above the other.
+ */
+[data-blume-doc-grid] {
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 64rem) {
+  [data-blume-doc-grid] {
+    grid-template-columns: minmax(0, 1fr) 17.5rem !important;
+    grid-template-rows: 14rem auto !important;
+    align-items: start !important;
+  }
+  [data-blume-nav-drawer] {
+    grid-column: 2;
+    grid-row: 1;
+    height: 14rem !important;
+    max-height: 14rem !important;
+    overflow-y: auto;
+    position: static !important;
+    border-inline-end: none !important;
+    border-bottom: 1px solid var(--blume-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+  #blume-content {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (min-width: 80rem) {
+  [data-blume-toc] {
+    grid-column: 2;
+    grid-row: 2;
+    height: auto !important;
+    max-height: none !important;
+    position: static !important;
+  }
+}
+
+/*
+ * Faculty grid (docs/faculty/index.mdx) — a photo card per member, matching
+ * the "現行踏襲・改良版" home page design draft's teaser cards.
+ */
+.faculty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+@media (max-width: 720px) {
+  .faculty-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .faculty-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.faculty-card {
+  text-align: center;
+}
+.faculty-photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  background: var(--blume-muted);
+  border: 1px solid var(--blume-border);
+  margin-bottom: 0.75rem;
+}
+.faculty-card h4 {
+  margin: 0 0 0.15rem;
+  font-size: 1rem;
+}
+.faculty-card .role {
+  font-size: 0.85rem;
+  color: var(--blume-muted-foreground, #6b6660);
+  margin: 0 0 0.15rem;
+}
+.faculty-card .field {
+  font-size: 0.85rem;
+  color: var(--blume-accent);
+  margin: 0 0 0.4rem;
+}
+.faculty-card .contact {
+  font-size: 0.8rem;
+  margin: 0 0 0.4rem;
+}
+.faculty-card .links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+.faculty-card .label-link {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--blume-border);
+  border-radius: 999px;
+  color: var(--blume-muted-foreground, #6b6660);
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.faculty-card .label-link:hover,
+.faculty-card .label-link:focus-visible {
+  color: var(--blume-accent);
+  border-color: var(--blume-accent);
+}

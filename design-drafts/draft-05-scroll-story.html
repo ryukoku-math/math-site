@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数理・情報科学課程 | 龍谷大学 先端理工学部</title>
+<style>
+  :root{
+    --ink:#232323;
+    --red:#F50000;
+    --c1:#FFFFFF;
+    --c2:#FFF1E8;
+    --c3:#EAF6FC;
+    --c4:#EAFBF3;
+    --c5:#FFF8EE;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:"Hiragino Sans","Noto Sans JP",sans-serif;
+    color:var(--ink);
+    background:var(--c1);
+    overflow-x:hidden;
+  }
+  a{color:var(--red);}
+  a:focus-visible, button:focus-visible{
+    outline:3px solid var(--red);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  /* ---- progress rail ---- */
+  #rail{
+    position:fixed;
+    top:0;
+    left:0;
+    width:6px;
+    height:100vh;
+    background:rgba(35,35,35,0.08);
+    z-index:100;
+  }
+  #rail-fill{
+    width:100%;
+    height:0%;
+    background:linear-gradient(180deg,var(--red),#ff6b4a);
+    transition:height 0.05s linear;
+  }
+  @media (max-width:600px){
+    #rail{width:4px;}
+  }
+
+  /* ---- chapter base ---- */
+  .chapter{
+    min-height:100vh;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    padding:6rem 1.5rem;
+    position:relative;
+    text-align:center;
+  }
+  .chapter-inner{
+    max-width:900px;
+    width:100%;
+  }
+  .kicker{
+    font-size:0.9rem;
+    letter-spacing:0.15em;
+    font-weight:700;
+    color:var(--red);
+    text-transform:uppercase;
+    margin-bottom:1rem;
+  }
+  h1,h2{
+    font-weight:800;
+    line-height:1.2;
+    margin:0 0 1.2rem;
+  }
+  .headline{
+    font-size:clamp(2.4rem, 7vw, 4.5rem);
+  }
+  p{
+    line-height:1.8;
+    font-size:1.05rem;
+  }
+
+  /* reveal animation */
+  .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.in-view{
+    opacity:1;
+    transform:translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{
+      opacity:1 !important;
+      transform:none !important;
+      transition:none !important;
+    }
+    html{scroll-behavior:auto;}
+  }
+  /* JS-disabled fallback: everything must already be visible via .reveal default state below,
+     handled by the no-js class on <html> added only if JS never runs (see noscript block) */
+  .no-js .reveal{
+    opacity:1;
+    transform:none;
+  }
+
+  /* ---- chapter 1: hero ---- */
+  #ch1{background:var(--c1);}
+  .logo{
+    max-width:280px;
+    width:60vw;
+    height:auto;
+    margin-bottom:2.5rem;
+  }
+  .hero-sub{
+    font-size:1rem;
+    color:#555;
+    margin-top:1.5rem;
+  }
+  .en-sub{
+    font-size:0.85rem;
+    letter-spacing:0.05em;
+    color:#777;
+    margin-top:0.4rem;
+  }
+  .scroll-cue{
+    position:absolute;
+    bottom:2.5rem;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.4rem;
+    color:var(--red);
+    font-size:0.85rem;
+    font-weight:700;
+  }
+  .scroll-cue svg{
+    width:22px;
+    height:22px;
+    animation:bounce 1.8s infinite;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .scroll-cue svg{animation:none;}
+  }
+  @keyframes bounce{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(8px);}
+  }
+
+  /* ---- chapter 2: nav rows ---- */
+  #ch2{background:var(--c2); align-items:stretch; text-align:left;}
+  #ch2 .chapter-inner{max-width:760px; margin:0 auto;}
+  #ch2 h2{text-align:center;}
+  #ch2 > .chapter-inner > p.intro{text-align:center; max-width:600px; margin:0 auto 1rem;}
+  .short-lines{
+    text-align:center;
+    max-width:620px;
+    margin:0 auto 2.5rem;
+    font-weight:700;
+    font-size:1.15rem;
+  }
+  .short-lines span{display:block; margin-bottom:0.3rem;}
+  details.readmore{
+    max-width:620px;
+    margin:0 auto 3rem;
+    background:rgba(255,255,255,0.6);
+    border-radius:12px;
+    padding:0.9rem 1.2rem;
+    font-size:0.9rem;
+  }
+  details.readmore summary{
+    cursor:pointer;
+    font-weight:700;
+    color:var(--red);
+  }
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    background:#fff;
+    border-radius:16px;
+    padding:1.6rem 1.8rem;
+    margin-bottom:1.1rem;
+    box-shadow:0 4px 18px rgba(0,0,0,0.05);
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .nav-row:hover, .nav-row:focus-visible{
+    transform:translateX(6px);
+    box-shadow:0 8px 24px rgba(245,0,0,0.12);
+  }
+  .nav-row .num{
+    font-size:1.6rem;
+    font-weight:800;
+    color:var(--red);
+    min-width:2.2rem;
+  }
+  .nav-row .txt{flex:1;}
+  .nav-row .title{
+    font-size:1.3rem;
+    font-weight:800;
+    margin-bottom:0.25rem;
+  }
+  .nav-row .desc{
+    font-size:0.92rem;
+    color:#555;
+    line-height:1.5;
+  }
+  .nav-row .arrow{
+    font-size:1.4rem;
+    color:var(--red);
+    flex-shrink:0;
+  }
+  .tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.6rem;
+    justify-content:center;
+    margin-top:2.5rem;
+  }
+  .tag{
+    background:#fff;
+    border:1px solid rgba(245,0,0,0.25);
+    color:var(--red);
+    font-size:0.82rem;
+    font-weight:700;
+    padding:0.45rem 0.9rem;
+    border-radius:999px;
+  }
+
+  /* ---- chapter 3: faculty ---- */
+  #ch3{background:var(--c3);}
+  .faculty-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1.6rem;
+    margin-top:1rem;
+  }
+  @media (max-width:700px){
+    .faculty-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+  @media (max-width:420px){
+    .faculty-grid{grid-template-columns:1fr 1fr; gap:1rem;}
+  }
+  .fcard{
+    background:#fff;
+    border-radius:16px;
+    padding:1.1rem 0.8rem 1.3rem;
+    box-shadow:0 4px 16px rgba(0,0,0,0.06);
+    transition-delay:calc(var(--i, 0) * 0.08s);
+  }
+  .fcard img{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:12px;
+    margin-bottom:0.8rem;
+    background:#ddd;
+  }
+  .fcard .fname{
+    font-weight:800;
+    font-size:1rem;
+  }
+  .fcard .frole{
+    font-size:0.78rem;
+    color:var(--red);
+    font-weight:700;
+    margin:0.15rem 0;
+  }
+  .fcard .ffield{
+    font-size:0.78rem;
+    color:#555;
+  }
+  .see-all{
+    margin-top:2.2rem;
+    display:inline-block;
+    font-weight:700;
+  }
+
+  /* ---- chapter 4: open lab ---- */
+  #ch4{background:var(--c4);}
+  .lab-cards{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.4rem;
+    margin-top:1rem;
+    text-align:left;
+  }
+  @media (max-width:600px){
+    .lab-cards{grid-template-columns:1fr;}
+  }
+  .lab-card{
+    background:#fff;
+    border-radius:16px;
+    padding:1.5rem 1.6rem;
+    box-shadow:0 4px 16px rgba(0,0,0,0.06);
+    border-left:5px solid var(--red);
+    transition-delay:calc(var(--i, 0) * 0.1s);
+  }
+  .lab-card .lab-title{
+    font-weight:800;
+    font-size:1.15rem;
+    margin-bottom:0.4rem;
+  }
+  .lab-card .lab-lab{
+    font-size:0.85rem;
+    color:#666;
+  }
+  .oc-note{
+    font-size:0.85rem;
+    color:#666;
+    margin-top:1.8rem;
+  }
+
+  /* ---- chapter 5: access + footer ---- */
+  #ch5{background:var(--c5); justify-content:flex-start; padding-top:8rem;}
+  .access-box{
+    background:#fff;
+    border-radius:16px;
+    padding:2rem;
+    box-shadow:0 4px 16px rgba(0,0,0,0.06);
+    text-align:left;
+    margin-bottom:2rem;
+  }
+  .access-box dt{
+    font-size:0.78rem;
+    font-weight:700;
+    color:var(--red);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-top:1rem;
+  }
+  .access-box dt:first-child{margin-top:0;}
+  .access-box dd{
+    margin:0.2rem 0 0;
+    font-size:1rem;
+  }
+  footer{
+    margin-top:auto;
+    padding-top:3rem;
+    font-size:0.8rem;
+    color:#888;
+    text-align:center;
+  }
+
+  .cta-btn{
+    display:inline-block;
+    background:var(--red);
+    color:#fff;
+    font-weight:700;
+    padding:0.9rem 2.2rem;
+    border-radius:999px;
+    text-decoration:none;
+    margin-top:1.5rem;
+    box-shadow:0 6px 18px rgba(245,0,0,0.25);
+  }
+  .cta-btn:hover{background:#d40000;}
+</style>
+</head>
+<body>
+
+<div id="rail" aria-hidden="true"><div id="rail-fill"></div></div>
+
+<!-- ===================== CHAPTER 1: HERO ===================== -->
+<section id="ch1" class="chapter">
+  <div class="chapter-inner">
+    <img class="logo" src="images/advanced_rgb_hj.png" alt="龍谷大学 先端理工学部 ロゴ">
+    <p class="kicker reveal">龍谷大学 先端理工学部</p>
+    <h1 class="headline reveal">数学とAIで、<br>世界の見方を変えよう。</h1>
+    <p class="hero-sub reveal">数理・情報科学課程</p>
+    <p class="en-sub reveal">Applied Mathematics and Informatics Course, Faculty of Advanced Science and Technology</p>
+  </div>
+  <div class="scroll-cue reveal" aria-hidden="true">
+    <span>SCROLL</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 2: 何を学べる？ ===================== -->
+<section id="ch2" class="chapter">
+  <div class="chapter-inner">
+    <p class="kicker reveal">CHAPTER 02</p>
+    <h2 class="headline reveal">何を学べる？</h2>
+
+    <div class="short-lines reveal">
+      <span>数学と情報科学は、</span>
+      <span>分野を越えて本質にせまる「道具」。</span>
+      <span>論理的に考え、課題を解決できる人材へ。</span>
+    </div>
+
+    <details class="readmore reveal">
+      <summary>もっと読む（原文）</summary>
+      <p>複雑で変化の激しい現代の科学技術の世界では、様々な分野が互いに関連しあいながら新しいものが生まれています。数学や情報科学は、分野の枠を越えて物事の本質にせまり、課題を分析し解決するための道具となります。数理・情報科学課程では、物事を論理的に考え適切に表現する力、課題を数学的・数量的に分析し解決する力、IT社会に柔軟に対応し活躍できる力を備えた人材の育成を目指します。</p>
+    </details>
+
+    <a class="nav-row reveal" href="#">
+      <span class="num">01</span>
+      <span class="txt">
+        <span class="title">数理・情報学課程とは</span>
+        <span class="desc">課程の教育方針や学びの特色を紹介</span>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="nav-row reveal" href="#">
+      <span class="num">02</span>
+      <span class="txt">
+        <span class="title">研究・教育</span>
+        <span class="desc">数学・情報科学の研究室紹介</span>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="nav-row reveal" href="#">
+      <span class="num">03</span>
+      <span class="txt">
+        <span class="title">課程担当教員</span>
+        <span class="desc">17名の教員紹介</span>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="nav-row reveal" href="#">
+      <span class="num">04</span>
+      <span class="txt">
+        <span class="title">入学・進路</span>
+        <span class="desc">入試情報・卒業後の進路</span>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="nav-row reveal" href="#">
+      <span class="num">05</span>
+      <span class="txt">
+        <span class="title">課程動画集</span>
+        <span class="desc">課程紹介の動画まとめ</span>
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </a>
+
+    <div class="tags reveal">
+      <span class="tag">優秀プレゼンテーション賞</span>
+      <span class="tag">センタンLAB</span>
+      <span class="tag">21の学びのプログラム</span>
+      <span class="tag">BYOD（ノートPC必携化）</span>
+      <span class="tag">R-Gap・プロジェクトリサーチ</span>
+      <span class="tag">STEAMコモンズ</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 3: 先生たちに会おう ===================== -->
+<section id="ch3" class="chapter">
+  <div class="chapter-inner">
+    <p class="kicker reveal">CHAPTER 03</p>
+    <h2 class="headline reveal">先生たちに<br>会おう</h2>
+    <p class="reveal">数学・情報科学、それぞれの専門を持つ教員が皆さんを待っています。</p>
+
+    <div class="faculty-grid">
+      <div class="fcard reveal" style="--i:0">
+        <img src="images/sano.png" alt="佐野彰 先生" loading="lazy">
+        <div class="fname">佐野彰</div>
+        <div class="frole">助教</div>
+        <div class="ffield">人工認知・数理脳科学</div>
+      </div>
+      <div class="fcard reveal" style="--i:1">
+        <img src="images/fukao.png" alt="深尾武史 先生" loading="lazy">
+        <div class="fname">深尾武史</div>
+        <div class="frole">教授</div>
+        <div class="ffield">発展方程式</div>
+      </div>
+      <div class="fcard reveal" style="--i:2">
+        <img src="images/takahashi.png" alt="高橋隆史 先生" loading="lazy">
+        <div class="fname">高橋隆史</div>
+        <div class="frole">准教授</div>
+        <div class="ffield">人工知能（機械学習、パターン認識）</div>
+      </div>
+      <div class="fcard reveal" style="--i:3">
+        <img src="images/qma.png" alt="馬青 先生" loading="lazy">
+        <div class="fname">馬青</div>
+        <div class="frole">教授</div>
+        <div class="ffield">自然言語処理（知能情報学）</div>
+      </div>
+      <div class="fcard reveal" style="--i:4">
+        <img src="images/kakugawa.png" alt="角川裕次 先生" loading="lazy">
+        <div class="fname">角川裕次</div>
+        <div class="frole">教授</div>
+        <div class="ffield">分散アルゴリズム</div>
+      </div>
+      <div class="fcard reveal" style="--i:5">
+        <img src="images/murakawa.png" alt="村川秀樹 先生" loading="lazy">
+        <div class="fname">村川秀樹</div>
+        <div class="frole">教授</div>
+        <div class="ffield">応用数学、数値解析学</div>
+      </div>
+    </div>
+
+    <a class="see-all reveal" href="#">教員一覧（17名）を見る ›</a>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 4: オープンラボ ===================== -->
+<section id="ch4" class="chapter">
+  <div class="chapter-inner">
+    <p class="kicker reveal">CHAPTER 04</p>
+    <h2 class="headline reveal">オープンラボで<br>やったこと</h2>
+    <p class="reveal">2024年度オープンキャンパスで実施した企画の一部です。</p>
+
+    <div class="lab-cards">
+      <div class="lab-card reveal" style="--i:0">
+        <div class="lab-title">分散アルゴリズムを学ぼう</div>
+        <div class="lab-lab">角川研究室</div>
+      </div>
+      <div class="lab-card reveal" style="--i:1">
+        <div class="lab-title">画像AIで遊ぼう！</div>
+        <div class="lab-lab">馬研究室</div>
+      </div>
+      <div class="lab-card reveal" style="--i:2">
+        <div class="lab-title">高校数学と大学数学の違い</div>
+        <div class="lab-lab">深尾研究室</div>
+      </div>
+      <div class="lab-card reveal" style="--i:3">
+        <div class="lab-title">AIで農業支援！</div>
+        <div class="lab-lab">佐野研究室</div>
+      </div>
+    </div>
+
+    <p class="oc-note reveal">次回のオープンキャンパスもお楽しみに。</p>
+    <a class="cta-btn reveal" href="#">オープンキャンパス情報を見る</a>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 5: ACCESS / FOOTER ===================== -->
+<section id="ch5" class="chapter">
+  <div class="chapter-inner">
+    <p class="kicker reveal">CHAPTER 05</p>
+    <h2 class="headline reveal">会いに来てください</h2>
+
+    <dl class="access-box reveal">
+      <dt>窓口</dt>
+      <dd>数理・情報科学課程事務室</dd>
+      <dt>所在地</dt>
+      <dd>〒520-2194 滋賀県大津市瀬田大江町横谷1-5</dd>
+      <dt>メール</dt>
+      <dd><a href="mailto:jimu@math.ryukoku.ac.jp">jimu@math.ryukoku.ac.jp</a></dd>
+      <dt>電話</dt>
+      <dd><a href="tel:0775437523">077-543-7523</a></dd>
+    </dl>
+
+    <footer class="reveal">
+      &copy; 龍谷大学 先端理工学部 数理・情報科学課程<br>
+      Applied Mathematics and Informatics Course, Faculty of Advanced Science and Technology, Ryukoku University
+    </footer>
+  </div>
+</section>
+
+<noscript>
+  <style>.reveal{opacity:1 !important; transform:none !important;} #rail{display:none;}</style>
+</noscript>
+
+<script>
+(function(){
+  // Progress rail: fills 0-100% across full scrollable height.
+  var fill = document.getElementById('rail-fill');
+  function updateRail(){
+    var doc = document.documentElement;
+    var scrollable = doc.scrollHeight - doc.clientHeight;
+    var pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+    fill.style.height = Math.min(100, Math.max(0, pct)) + '%';
+  }
+  window.addEventListener('scroll', updateRail, {passive:true});
+  window.addEventListener('resize', updateRail);
+  updateRail();
+
+  // Scroll reveal via IntersectionObserver. Skips entirely (leaves content
+  // visible, no animation) if reduced motion is requested or IO unsupported.
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in-view'); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.15, rootMargin:'0px 0px -5% 0px'});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+})();
+</script>
+
+</body>
+</html>

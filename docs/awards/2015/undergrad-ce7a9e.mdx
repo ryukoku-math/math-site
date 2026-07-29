@@ -1,0 +1,14 @@
+---
+title: "「Bag-of-Featuresと色を特徴として用いSVMを識別器に用いた一般物体認識」"
+authors: "横井宇倫"
+seo:
+  description: "本研究では、画像中の物体を「犬」、「りんご」、「自動車」などの一般的な分類で認識する一般物体認識について考える。一般物体認識では、Bag-of-Features(BoF)と呼ばれる特徴表現がよく用いられる。BoFでは、画像から局所特徴と呼ば…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究では、画像中の物体を「犬」、「りんご」、「自動車」などの一般的な分類で認識する一般物体認識について考える。一般物体認識では、Bag-of-Features(BoF)と呼ばれる特徴表現がよく用いられる。BoFでは、画像から局所特徴と呼ばれるものを抽出し、それをヒストグラム化したものをその画像の特徴表現とする。本研究では、このBoFを用いて画像間の類似度を定義し、SVMと呼ばれる識別器で識別を行った。また、単純なBoFだけでなく、画像を領域に分割してBoFの特徴を作る方法(SPM)や、画像の色の分布を表すヒストグラムを組み合わせる方法も検討した。これらの手法の性能を調べるために、6クラスの鳥画像、100クラスのCaltech101、256クラスのCaltech256という3種類の画像データセットを用いて実験を行った。BoFのみ、BoFと色の組み合わせ、SPMと色の組み合わせの3種類の類似度での結果を比較すると、BoFと色の組み合わせか、SPMと色の組み合わせを特徴として用いた場合に最良の識別率が得られることが分かった。
+
+<SlideGallery images={["/images/awards/2015/undergrad-ce7a9e/01.png","/images/awards/2015/undergrad-ce7a9e/02.png","/images/awards/2015/undergrad-ce7a9e/03.png","/images/awards/2015/undergrad-ce7a9e/04.png","/images/awards/2015/undergrad-ce7a9e/05.png","/images/awards/2015/undergrad-ce7a9e/06.png"]} />
+

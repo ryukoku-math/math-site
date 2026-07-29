@@ -1,0 +1,14 @@
+---
+title: "「Raspberry Piと深層学習によるポータブル猫発見器」"
+authors: "吉川未紗"
+seo:
+  description: "本研究では、Raspberry Piを用いてポータブル猫発見器を実装した。本研究でいうポータブル猫発見器とは、小型のシングルボードコンピュータであるRaspberry…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究では、Raspberry Piを用いてポータブル猫発見器を実装した。本研究でいうポータブル猫発見器とは、小型のシングルボードコンピュータであるRaspberry Piにカメラを繋ぎ、撮影した画像中に猫が存在するかどうかを出力する仕組みである。画像中に猫が存在するかどうかを調べるために深層学習を利用した。このポータブル猫発見器を利用して、識別と検出の実験を行なった。Raspberry Piは小型で安価という利点を兼ね備えているが、処理速度が遅いといった欠点もある。そこで、処理速度を上げるためにIntel Movidius Neural Compute Stick(Movidius)を組み合わせた。Movidiusを利用することで深層学習の推論の部分のみ高速化を実現させた。深層学習のネットワークは，他の画像識別・検出問題に対して学習済みのものを利用した。識別実験ではInception-v3の精度を測り、検出実験ではMobileNet-SSDとTiny YOLOの精度の比較を行なった。それぞれのネットワークの精度の指標であるF値を比較すると、どのネットワークも正確に猫を見つけることが出来ていた。検出に関してはMobileNet-SSDの方がより正確かつ高速に猫を見つけることが出来ることがわかった。今後の課題は、猫発見器に適した学習データを用意し、学習から行なうことである。そのようにすることで、より正確かつ高速に猫を発見できるようになることを期待する。
+
+<SlideGallery images={["/images/awards/2018/undergrad-f5c7b0/01.png","/images/awards/2018/undergrad-f5c7b0/02.png","/images/awards/2018/undergrad-f5c7b0/03.png","/images/awards/2018/undergrad-f5c7b0/04.png","/images/awards/2018/undergrad-f5c7b0/05.png","/images/awards/2018/undergrad-f5c7b0/06.png","/images/awards/2018/undergrad-f5c7b0/07.png","/images/awards/2018/undergrad-f5c7b0/08.png"]} />
+

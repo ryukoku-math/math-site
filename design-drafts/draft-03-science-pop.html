@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数理・情報科学課程｜龍谷大学 先端理工学部</title>
+<style>
+  :root{
+    --red:#F50000;
+    --blue:#1E6FEB;
+    --yellow:#FFD400;
+    --mint:#00C48C;
+    --ink:#1A1A1A;
+    --grid:#E8F4FB;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background-color:#FFFFFF;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+    color:var(--ink);
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+    font-size:17px;
+    line-height:1.75;
+    position:relative;
+    overflow-x:hidden;
+  }
+  a{ color:inherit; }
+  img{ max-width:100%; display:block; }
+
+  .display{ font-weight:800; }
+
+  /* ---------- scattered background glyphs ---------- */
+  .glyphs{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:0;
+  }
+  .glyphs span{
+    position:absolute;
+    font-weight:800;
+    line-height:1;
+    opacity:0.10;
+    user-select:none;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    position:relative;
+    z-index:5;
+    background:#FFFFFF;
+    border-bottom:3px solid var(--ink);
+  }
+  .header-inner{
+    max-width:1120px;
+    margin:0 auto;
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .logo-lockup img{ height:44px; width:auto; }
+  .breadcrumb{
+    font-size:13px;
+    color:#555;
+    font-weight:700;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    z-index:2;
+    max-width:1120px;
+    margin:0 auto;
+    padding:56px 20px 40px;
+  }
+  .hero-english{
+    display:inline-block;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:0.03em;
+    color:var(--blue);
+    background:#FFFFFF;
+    border:2px solid var(--blue);
+    border-radius:999px;
+    padding:5px 16px;
+    margin-bottom:22px;
+  }
+  .notebook-note{
+    background:#fff;
+    border:3px solid var(--ink);
+    border-radius:20px;
+    padding:32px 28px;
+    position:relative;
+    box-shadow:8px 8px 0 var(--yellow);
+  }
+  .notebook-note::before{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border:2px dashed rgba(30,111,235,0.35);
+    border-radius:12px;
+    pointer-events:none;
+  }
+  .qa-line{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:18px;
+    font-size:clamp(1.6rem, 5vw, 2.7rem);
+    font-weight:800;
+  }
+  .qa-line .q{ color:var(--ink); }
+  .qa-line .arrow{
+    font-size:clamp(1.8rem, 5vw, 3rem);
+    color:var(--red);
+    transform:rotate(-4deg);
+    display:inline-block;
+  }
+  .qa-line .a{ color:var(--blue); }
+  .hero-sub{
+    margin-top:18px;
+    font-size:16px;
+    color:#333;
+    max-width:640px;
+  }
+  .hero-sub strong{ color:var(--red); }
+
+  /* ---------- nav tiles ---------- */
+  .tiles-section{
+    position:relative;
+    z-index:2;
+    max-width:1120px;
+    margin:0 auto;
+    padding:20px 20px 50px;
+  }
+  .tiles-heading{
+    font-size:1.1rem;
+    font-weight:800;
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .tiles-heading::before{
+    content:"✎";
+    color:var(--red);
+    font-size:1.4rem;
+  }
+  .tiles-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:18px;
+  }
+  .tile{
+    display:block;
+    border-radius:22px;
+    padding:24px 20px;
+    text-decoration:none;
+    color:#fff;
+    font-weight:800;
+    position:relative;
+    border:3px solid var(--ink);
+    box-shadow:6px 6px 0 rgba(0,0,0,0.85);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    min-height:150px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .tile:hover, .tile:focus-visible{
+    transform:translate(-4px,-4px);
+    box-shadow:10px 10px 0 rgba(0,0,0,0.85);
+  }
+  .tile:focus-visible{
+    outline:4px solid var(--ink);
+    outline-offset:3px;
+  }
+  .tile .icon{
+    font-size:2.2rem;
+    line-height:1;
+  }
+  .tile .tile-title{
+    font-size:1.05rem;
+    margin-top:14px;
+  }
+  .tile .tile-hook{
+    font-size:0.82rem;
+    font-weight:500;
+    margin-top:6px;
+    opacity:0.95;
+  }
+  .tile.c1{ background:var(--red); }
+  .tile.c2{ background:var(--blue); }
+  .tile.c3{ background:#DDA800; color:var(--ink); }
+  .tile.c4{ background:var(--mint); color:var(--ink); }
+  .tile.c5{ background:#5A3FD6; }
+
+  /* ---------- intro ---------- */
+  .intro-section{
+    position:relative;
+    z-index:2;
+    max-width:900px;
+    margin:0 auto;
+    padding:10px 20px 60px;
+  }
+  .intro-card{
+    background:#fff;
+    border:3px solid var(--ink);
+    border-radius:20px;
+    padding:30px 28px;
+  }
+  .intro-card h2{
+    font-size:1.3rem;
+    font-weight:800;
+    margin:0 0 16px;
+    color:var(--red);
+  }
+  .intro-card p{
+    margin:0;
+    color:#222;
+  }
+
+  /* ---------- pills ---------- */
+  .pills-section{
+    position:relative;
+    z-index:2;
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 20px 60px;
+  }
+  .pills-section h2{
+    font-size:1.3rem;
+    font-weight:800;
+    margin-bottom:18px;
+  }
+  .pills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .pill{
+    display:inline-block;
+    padding:9px 18px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:0.92rem;
+    border:2.5px solid var(--ink);
+    background:#fff;
+  }
+  .pill:nth-child(4n+1){ background:#FFEFA8; }
+  .pill:nth-child(4n+2){ background:#BFE0FF; }
+  .pill:nth-child(4n+3){ background:#B9F3DD; }
+  .pill:nth-child(4n+4){ background:#FFC9C9; }
+
+  /* ---------- open lab exhibits ---------- */
+  .lab-section{
+    position:relative;
+    z-index:2;
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 20px 60px;
+  }
+  .lab-section h2{
+    font-size:1.3rem;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .lab-section .lab-note{
+    font-size:0.88rem;
+    color:#555;
+    margin-bottom:20px;
+    font-weight:700;
+  }
+  .lab-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:18px;
+  }
+  .lab-card{
+    border:3px solid var(--ink);
+    border-radius:18px;
+    padding:22px 20px;
+    background:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .lab-card::after{
+    content:"";
+    position:absolute;
+    top:-20px;
+    right:-20px;
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    opacity:0.18;
+  }
+  .lab-card.l1::after{ background:var(--red); }
+  .lab-card.l2::after{ background:var(--blue); }
+  .lab-card.l3::after{ background:var(--yellow); }
+  .lab-card.l4::after{ background:var(--mint); }
+  .lab-card .lab-tag{
+    display:inline-block;
+    font-size:0.72rem;
+    font-weight:800;
+    color:#fff;
+    background:var(--ink);
+    border-radius:6px;
+    padding:2px 8px;
+    margin-bottom:10px;
+  }
+  .lab-card .lab-title{
+    font-weight:800;
+    font-size:1.05rem;
+    margin-bottom:6px;
+  }
+  .lab-card .lab-lab{
+    font-size:0.85rem;
+    color:#555;
+    font-weight:700;
+  }
+
+  /* ---------- faculty filmstrip ---------- */
+  .faculty-section{
+    position:relative;
+    z-index:2;
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 20px 60px;
+  }
+  .faculty-section h2{
+    font-size:1.3rem;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .faculty-section .faculty-note{
+    font-size:0.9rem;
+    color:#555;
+    margin-bottom:20px;
+    font-weight:700;
+  }
+  .filmstrip{
+    display:flex;
+    gap:22px;
+    overflow-x:auto;
+    padding:10px 6px 20px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .filmstrip::-webkit-scrollbar{ height:10px; }
+  .filmstrip::-webkit-scrollbar-thumb{ background:var(--blue); border-radius:6px; }
+  .faculty-card{
+    flex:0 0 auto;
+    width:150px;
+    text-align:center;
+    scroll-snap-align:start;
+  }
+  .faculty-card .avatar-wrap{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    margin:0 auto 12px;
+    border:4px solid var(--ink);
+    overflow:hidden;
+    background:#fff;
+    position:relative;
+  }
+  .faculty-card:nth-child(6n+1) .avatar-wrap{ box-shadow:0 0 0 5px var(--red) inset; }
+  .faculty-card:nth-child(6n+2) .avatar-wrap{ box-shadow:0 0 0 5px var(--blue) inset; }
+  .faculty-card:nth-child(6n+3) .avatar-wrap{ box-shadow:0 0 0 5px var(--yellow) inset; }
+  .faculty-card:nth-child(6n+4) .avatar-wrap{ box-shadow:0 0 0 5px var(--mint) inset; }
+  .faculty-card:nth-child(6n+5) .avatar-wrap{ box-shadow:0 0 0 5px var(--red) inset; }
+  .faculty-card:nth-child(6n+6) .avatar-wrap{ box-shadow:0 0 0 5px var(--blue) inset; }
+  .faculty-card img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .faculty-card .hook{
+    font-weight:800;
+    font-size:0.9rem;
+    margin-bottom:2px;
+  }
+  .faculty-card .name{
+    font-size:0.82rem;
+    color:#444;
+    font-weight:700;
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    position:relative;
+    z-index:2;
+    border-top:3px solid var(--ink);
+    background:#fff;
+    padding:34px 20px 40px;
+  }
+  .footer-inner{
+    max-width:1120px;
+    margin:0 auto;
+    font-size:0.88rem;
+    color:#444;
+  }
+  .footer-inner .foot-title{
+    font-weight:800;
+    color:var(--ink);
+    font-size:1rem;
+    margin-bottom:8px;
+  }
+  .footer-inner a.foot-link{
+    color:var(--blue);
+    font-weight:700;
+    text-decoration:underline;
+  }
+
+  a:focus-visible, button:focus-visible{
+    outline:3px solid var(--ink);
+    outline-offset:2px;
+  }
+
+  @media (max-width:600px){
+    .hero{ padding-top:36px; }
+    .notebook-note{ padding:24px 18px; }
+    .qa-line{ gap:10px; }
+    .tiles-grid{ grid-template-columns:1fr 1fr; }
+    .filmstrip{ gap:16px; }
+  }
+  @media (max-width:420px){
+    .tiles-grid{ grid-template-columns:1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .tile{ transition:none; }
+    .tile:hover, .tile:focus-visible{ transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="glyphs" aria-hidden="true">
+    <span style="top:6%; left:4%; font-size:3.2rem; color:var(--red); transform:rotate(-12deg);">∑</span>
+    <span style="top:14%; left:82%; font-size:2.6rem; color:var(--blue); transform:rotate(9deg);">π</span>
+    <span style="top:30%; left:12%; font-size:2.2rem; color:var(--mint); transform:rotate(6deg);">√</span>
+    <span style="top:46%; left:90%; font-size:3rem; color:var(--yellow); transform:rotate(-8deg);">∞</span>
+    <span style="top:60%; left:6%; font-size:2.4rem; color:var(--red); transform:rotate(14deg);">ƒ(x)</span>
+    <span style="top:75%; left:85%; font-size:2.8rem; color:var(--blue); transform:rotate(-6deg);">∫</span>
+    <span style="top:88%; left:18%; font-size:2rem; color:var(--mint); transform:rotate(10deg);">01</span>
+    <span style="top:20%; left:50%; font-size:1.8rem; color:var(--yellow); transform:rotate(-15deg);">≈</span>
+    <span style="top:95%; left:60%; font-size:2.4rem; color:var(--red); transform:rotate(5deg);">π</span>
+    <span style="top:4%; left:40%; font-size:2rem; color:var(--blue); transform:rotate(20deg);">10</span>
+    <span style="top:55%; left:45%; font-size:2.2rem; color:var(--mint); transform:rotate(-10deg);">∑</span>
+    <span style="top:68%; left:70%; font-size:1.9rem; color:var(--yellow); transform:rotate(8deg);">√</span>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo-lockup">
+        <img src="images/advanced_rgb_hj.png" alt="龍谷大学 先端理工学部 ロゴ">
+      </div>
+      <div class="breadcrumb">龍谷大学 &gt; 先端理工学部 &gt; 数理・情報科学課程</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="hero-english">Applied Mathematics and Informatics Course, Faculty of Advanced Science and Technology</span>
+      <div class="notebook-note">
+        <p class="qa-line display">
+          <span class="q">数学は難しい？</span>
+          <span class="arrow">→</span>
+          <span class="a">いいえ、道具です。</span>
+        </p>
+        <p class="hero-sub">
+          数理・情報科学課程は、<strong>数学</strong>と<strong>情報科学</strong>を「難しい科目」ではなく「世界を読み解く道具」として学ぶ場所です。
+        </p>
+      </div>
+    </section>
+
+    <section class="tiles-section" aria-label="主要ナビゲーション">
+      <p class="tiles-heading">課程をのぞいてみよう</p>
+      <div class="tiles-grid">
+        <a class="tile c1" href="#about">
+          <span class="icon">◆</span>
+          <span>
+            <span class="tile-title display">数理・情報学課程とは</span>
+            <span class="tile-hook">課程の教育方針や学びの特色を紹介</span>
+          </span>
+        </a>
+        <a class="tile c2" href="#research">
+          <span class="icon">🔬</span>
+          <span>
+            <span class="tile-title display">研究・教育</span>
+            <span class="tile-hook">数学・情報科学の研究室紹介</span>
+          </span>
+        </a>
+        <a class="tile c3" href="#faculty">
+          <span class="icon">👩‍🏫</span>
+          <span>
+            <span class="tile-title display">課程担当教員</span>
+            <span class="tile-hook">17名の教員紹介</span>
+          </span>
+        </a>
+        <a class="tile c4" href="#admission">
+          <span class="icon">🎓</span>
+          <span>
+            <span class="tile-title display">入学・進路</span>
+            <span class="tile-hook">入試情報・卒業後の進路</span>
+          </span>
+        </a>
+        <a class="tile c5" href="#videos">
+          <span class="icon">▶</span>
+          <span>
+            <span class="tile-title display">課程動画集</span>
+            <span class="tile-hook">課程紹介の動画まとめ</span>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <section class="intro-section" id="about">
+      <div class="intro-card">
+        <h2 class="display">数理・情報科学課程って、どんな学び？</h2>
+        <p>
+          複雑で変化の激しい現代の科学技術の世界では、様々な分野が互いに関連しあいながら新しいものが生まれています。数学や情報科学は、分野の枠を越えて物事の本質にせまり、課題を分析し解決するための道具となります。数理・情報科学課程では、物事を論理的に考え適切に表現する力、課題を数学的・数量的に分析し解決する力、IT社会に柔軟に対応し活躍できる力を備えた人材の育成を目指します。
+        </p>
+      </div>
+    </section>
+
+    <section class="pills-section">
+      <h2 class="display">課程のトピック</h2>
+      <div class="pills">
+        <span class="pill">優秀プレゼンテーション賞</span>
+        <span class="pill">センタンLAB（先端理工学部スペシャルサイト）</span>
+        <span class="pill">21の学びのプログラム（データサイエンス・人工知能・情報科学・数理解析・現象の数理）</span>
+        <span class="pill">BYOD（ノートPC必携化）</span>
+        <span class="pill">R-Gap・プロジェクトリサーチ：約3ヶ月間（3年次の6月中旬〜9月中旬）の自主活動期間</span>
+        <span class="pill">STEAMコモンズ：「ものづくり」と「デザイン」のためのファブ施設</span>
+      </div>
+    </section>
+
+    <section class="lab-section" id="research">
+      <h2 class="display">オープンキャンパスで大人気だった企画</h2>
+      <p class="lab-note">2024年度オープンキャンパスで実施した企画</p>
+      <div class="lab-grid">
+        <div class="lab-card l1">
+          <span class="lab-tag">EXHIBIT</span>
+          <p class="lab-title display">分散アルゴリズムを学ぼう</p>
+          <p class="lab-lab">角川研究室</p>
+        </div>
+        <div class="lab-card l2">
+          <span class="lab-tag">EXHIBIT</span>
+          <p class="lab-title display">画像AIで遊ぼう！</p>
+          <p class="lab-lab">馬研究室</p>
+        </div>
+        <div class="lab-card l3">
+          <span class="lab-tag">EXHIBIT</span>
+          <p class="lab-title display">高校数学と大学数学の違い</p>
+          <p class="lab-lab">深尾研究室</p>
+        </div>
+        <div class="lab-card l4">
+          <span class="lab-tag">EXHIBIT</span>
+          <p class="lab-title display">AIで農業支援！</p>
+          <p class="lab-lab">佐野研究室</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="faculty-section" id="faculty">
+      <h2 class="display">先生たちに会ってみよう</h2>
+      <p class="faculty-note">キャラクター選択みたいに、指でスライドしてチェック →</p>
+      <div class="filmstrip">
+        <div class="faculty-card">
+          <div class="avatar-wrap"><img src="images/sano.png" alt="佐野彰 先生"></div>
+          <p class="hook">AIと脳のナゾに挑む</p>
+          <p class="name">佐野彰／助教<br>人工認知・数理脳科学</p>
+        </div>
+        <div class="faculty-card">
+          <div class="avatar-wrap"><img src="images/fukao.png" alt="深尾武史 先生"></div>
+          <p class="hook">変化する式を追いかける</p>
+          <p class="name">深尾武史／教授<br>発展方程式</p>
+        </div>
+        <div class="faculty-card">
+          <div class="avatar-wrap"><img src="images/takahashi.png" alt="高橋隆史 先生"></div>
+          <p class="hook">機械に「わかる」を教える</p>
+          <p class="name">高橋隆史／准教授<br>人工知能（機械学習、パターン認識）</p>
+        </div>
+        <div class="faculty-card">
+          <div class="avatar-wrap"><img src="images/qma.png" alt="馬青 先生"></div>
+          <p class="hook">コンピュータに言葉を読ませる</p>
+          <p class="name">馬青／教授<br>自然言語処理（知能情報学）</p>
+        </div>
+        <div class="faculty-card">
+          <div class="avatar-wrap"><img src="images/kakugawa.png" alt="角川裕次 先生"></div>
+          <p class="hook">たくさんの機械を賢く動かす</p>
+          <p class="name">角川裕次／教授<br>分散アルゴリズム</p>
+        </div>
+        <div class="faculty-card">
+          <div class="avatar-wrap"><img src="images/yamagishi.png" alt="山岸義和 先生"></div>
+          <p class="hook">形とかたちの数学を探る</p>
+          <p class="name">山岸義和／准教授<br>応用幾何学</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="admission">
+    <div class="footer-inner">
+      <p class="foot-title">数理・情報科学課程事務室</p>
+      <p>〒520-2194 滋賀県大津市瀬田大江町横谷1-5</p>
+      <p><a class="foot-link" href="mailto:jimu@math.ryukoku.ac.jp">jimu@math.ryukoku.ac.jp</a>／077-543-7523</p>
+    </div>
+  </footer>
+
+</body>
+</html>

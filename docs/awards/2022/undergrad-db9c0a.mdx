@@ -1,0 +1,14 @@
+---
+title: "「VQ-VAEとPixelCNNによる一部が隠れた顔画像の補完」"
+authors: "山口恒大"
+seo:
+  description: "本研究は下部分が隠れた顔画像に対し、隠れた部分を補完することを目標とした。そのために、ニューラルネットワークのVQ-VAEで顔画像の符号化を行い、符号化を行なったものに対し生成モデルのPixelCNNで隠れた箇所を生成し復号するという手段…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究は下部分が隠れた顔画像に対し、隠れた部分を補完することを目標とした。そのために、ニューラルネットワークのVQ-VAEで顔画像の符号化を行い、符号化を行なったものに対し生成モデルのPixelCNNで隠れた箇所を生成し復号するという手段を用いた。VQ-VAEは畳み込みオートエンコーダであり、入力の本質的な特徴である特徴量を離散化する。PixelCNNは左上から右下へ順にピクセルが生成されたものとし、注目するピクセル以前から注目するピクセルの値を予測する。実験を行い、顔の特徴を捉えた画像を生成した。そして、品質の改善は望まれるが、顔画像の上部分に基づいた下部分を補完することが出来た。
+
+<SlideGallery images={["/images/awards/2022/undergrad-db9c0a/01.png","/images/awards/2022/undergrad-db9c0a/02.png","/images/awards/2022/undergrad-db9c0a/03.png","/images/awards/2022/undergrad-db9c0a/04.png","/images/awards/2022/undergrad-db9c0a/05.png","/images/awards/2022/undergrad-db9c0a/06.png","/images/awards/2022/undergrad-db9c0a/07.png","/images/awards/2022/undergrad-db9c0a/08.png"]} />
+

@@ -1,0 +1,14 @@
+---
+title: "「LINEとMoodleを用いたQuiz出題解答システム」"
+authors: "芝原昇吾"
+seo:
+  description: "現在、スマートフォンの普及が進むとともに、SNS（Social Networking…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+現在、スマートフォンの普及が進むとともに、SNS（Social Networking Service）といったコミュニケーションツールの利用者が増加してきた。中でも無料で通話やチャットができるLINEアプリは日本国内で最も利用者が多い。変わって、教育現場ではLMS（Learning Management System）学習管理システムが利用されており、情報通信技術を教育で活用することで、教育の質の向上を目指すICT教育が注目されている。また現在の大学生は、授業や課題の提出、テスト、サークル活動、バイトなど忙しい。どうにか隙間時間を有効活用できないかと考えた。そこで自分自身の出来を確認でき、また使いやすく手軽に取り組めるものを開発するということを目的とし、LINEとLMSのMoodleを用いたQuiz出題解答システムを開発研究した。本システムはLINEプラットフォーム、アプリケーション、Moodleで構成されており、言語はPHPを用いている。またQuizの進行具合や正解不正解の判別、回答結果の表示のためにデータベース（MySQL）を使用している。ユーザーはシステム管理者、Moodle管理者、教師、学生の４者が存在する。システムの仕組みは、学生がシステム管理者のLINE＠アカウントへトークでテキスト「課題」と送ると、LINEのトーク上でMoodleのQuizに取り組むことができる仕組みである。システム管理者はLINE＠アカウントを作成しMessaging APIを呼び出すアプリケーションを作成する。Moodle管理者はMoodleのインストールとコースの開設を行う。またMoodleのQuizをMoodle XMLファイルとしてエクスポートし、サーバーにアップロードする。教師はQuizの作成を行う。学生はシステム管理者のLINE＠アカウントを友だち追加し、トークで特定のテキスト「課題」を送信すると、Quizの問題名のリストがボタンメッセージとして返信される。問題名を選択すると問題に取り組むことができる。また正解すれば評価結果も見ることができる。本システムは多忙な大学生の時間効率を上げることはできないかと考え、使いやすく、手軽に課題に取り組むことができるシステムを開発するという目的は研究室で行ったアンケート結果から達成できたといえる。
+
+<SlideGallery images={["/images/awards/2017/undergrad-3d917c/01.png","/images/awards/2017/undergrad-3d917c/02.png","/images/awards/2017/undergrad-3d917c/03.png","/images/awards/2017/undergrad-3d917c/04.png","/images/awards/2017/undergrad-3d917c/05.png","/images/awards/2017/undergrad-3d917c/06.png","/images/awards/2017/undergrad-3d917c/07.png","/images/awards/2017/undergrad-3d917c/08.png"]} />
+

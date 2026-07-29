@@ -1,0 +1,14 @@
+---
+title: "「楽譜画像からのギター押弦位置推定システムの開発」"
+authors: "太江田涼"
+seo:
+  description: "本研究は楽譜画像からギターの押弦位置を推定することが目的である。楽譜画像から押弦位置の推定に必要な五線、音符・変化記号をOpenCVライブラリを用いて識別し、それらを用いてギターの押弦位置を推定する。五線はカスケード分類器でト音記号を識別し…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究は楽譜画像からギターの押弦位置を推定することが目的である。楽譜画像から押弦位置の推定に必要な五線、音符・変化記号をOpenCVライブラリを用いて識別し、それらを用いてギターの押弦位置を推定する。五線はカスケード分類器でト音記号を識別し、五線の描画範囲のあたりをつけ、ハフ変換と輝度値を利用し識別を行なった。音符・変化記号はテンプレートマッチングを利用し識別した。識別した五線、音符・変化記号の位置から音程を推定した。押弦位置は前の押弦位置との距離が最小になる位置を推定した。実際の楽譜を用いた実験から、改善点として音符・変化記号の識別方法や画像の局所領域の歪みに強い五線の識別方法が考えられる。
+
+<SlideGallery images={["/images/awards/2021/undergrad-9e0e6f/01.png","/images/awards/2021/undergrad-9e0e6f/02.png","/images/awards/2021/undergrad-9e0e6f/03.png","/images/awards/2021/undergrad-9e0e6f/04.png","/images/awards/2021/undergrad-9e0e6f/05.png","/images/awards/2021/undergrad-9e0e6f/06.png","/images/awards/2021/undergrad-9e0e6f/07.png","/images/awards/2021/undergrad-9e0e6f/08.png","/images/awards/2021/undergrad-9e0e6f/09.png","/images/awards/2021/undergrad-9e0e6f/10.png"]} />
+

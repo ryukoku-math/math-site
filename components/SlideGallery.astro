@@ -1,0 +1,48 @@
+---
+interface Props {
+  images: string[];
+}
+
+const { images } = Astro.props;
+---
+
+<div class="slide-gallery">
+  {
+    images.map((src, i) => (
+      <a class="slide" href={src} target="_blank" rel="noopener noreferrer">
+        <img src={src} alt={`スライド ${i + 1}`} loading="lazy" />
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  .slide-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+  .slide {
+    display: block;
+    border: 1px solid var(--blume-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--blume-muted);
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+  .slide:hover,
+  .slide:focus-visible {
+    border-color: var(--blume-accent);
+    transform: translateY(-2px);
+  }
+  .slide img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    background: #fff;
+  }
+</style>

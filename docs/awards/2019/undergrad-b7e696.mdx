@@ -1,0 +1,14 @@
+---
+title: "「Generative Adversarial Networks によるスイーツ画像の生成」"
+authors: "古野嗣弥"
+seo:
+  description: "本研究では、Generative Adversarial…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究では、Generative Adversarial Networks(GAN)を用いてスイーツ画像を生成させることを目標とした。GANとは、生成モデルと呼ばれるものの1つであり、与えられたデータの生成過程を学習するものである。GANは、Discriminator、Generatorという2つのニューラルネットワークからなる。Discriminatorは、データが与えられると、それが本物であるか偽物であるかを識別する。Generatorは、適当な乱数値に対して1つの偽物データを生成する。この2つのネットワークが敵対的な関係となり、学習を進める。Deep Convolutional GAN(DCGAN)、Patch GAN、Auxiliary Classifer GAN(ACGAN)という3つの手法で実際にスイーツ画像の生成を学習させる実験を行った。結果を比較すると、ACGANによる生成画像が最もスイーツらしく見えた。さらに、様々な改良を加えることで、より本物のスイーツらしい画像を生成できることも確認した。
+
+<SlideGallery images={["/images/awards/2019/undergrad-b7e696/01.png","/images/awards/2019/undergrad-b7e696/02.png","/images/awards/2019/undergrad-b7e696/03.png","/images/awards/2019/undergrad-b7e696/04.png","/images/awards/2019/undergrad-b7e696/05.png","/images/awards/2019/undergrad-b7e696/06.png","/images/awards/2019/undergrad-b7e696/07.png","/images/awards/2019/undergrad-b7e696/08.png","/images/awards/2019/undergrad-b7e696/09.png"]} />
+

@@ -1,0 +1,122 @@
+---
+import { getCollection } from "astro:content";
+import RootLayout from "blume/components/layout/RootLayout.astro";
+import data from "blume:data";
+
+const { config } = data;
+const routeById = new Map(data.routes.map((route) => [route.entryId, route.path]));
+
+const CATEGORY_LABEL = { graduate: "大学院", undergrad: "学部" };
+const CATEGORY_ORDER = ["graduate", "undergrad"];
+
+// entry.id looks like "awards/2025/graduate-25765b" — year and category ride
+// in the path/slug rather than frontmatter, since Blume's frontmatter schema
+// is strict and has no room for custom fields.
+const entries = (await getCollection("docs"))
+  .filter((entry) => entry.id.startsWith("awards/") && !entry.data.draft)
+  .map((entry) => {
+    const [, year, slug] = entry.id.split("/");
+    const category = slug.startsWith("graduate-") ? "graduate" : "undergrad";
+    return {
+      title: entry.data.title,
+      student: entry.data.authors,
+      year,
+      category,
+      href: routeById.get(entry.id),
+    };
+  });
+
+const years = [...new Set(entries.map((e) => e.year))].toSorted(
+  (a, b) => Number(b) - Number(a)
+);
+
+const grouped = years.map((year) => ({
+  year,
+  categories: CATEGORY_ORDER.map((category) => ({
+    category,
+    label: CATEGORY_LABEL[category],
+    items: entries.filter((e) => e.year === year && e.category === category),
+  })).filter((g) => g.items.length > 0),
+}));
+---
+
+<RootLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  navigation={data.navigation}
+  page={{
+    title: "優秀プレゼンテーション賞",
+    description: "学部・大学院生による優秀な研究発表の歴代受賞一覧",
+    route: "/awards",
+  }}
+  headings={[]}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  indexable={true}
+>
+  <h1>優秀プレゼンテーション賞</h1>
+  <p>
+    学部・大学院生による優秀な研究発表を毎年度表彰しています。年度・区分ごとの歴代受賞一覧です。
+  </p>
+
+  {
+    grouped.map((yearGroup) => (
+      <section class="award-year">
+        <h2>{yearGroup.year}年度</h2>
+        {yearGroup.categories.map((catGroup) => (
+          <div class="award-category">
+            <h3>{catGroup.label}</h3>
+            <ul class="award-list">
+              {catGroup.items.map((item) => (
+                <li>
+                  <a href={item.href}>{item.title}</a>
+                  <span class="student">{item.student}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    ))
+  }
+</RootLayout>
+
+<style>
+  .award-year {
+    margin: 2.5rem 0;
+  }
+  .award-year h2 {
+    border-bottom: 1px solid var(--blume-border);
+    padding-bottom: 0.5rem;
+  }
+  .award-category h3 {
+    font-size: 0.95rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    margin: 1.25rem 0 0.5rem;
+  }
+  .award-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .award-list li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--blume-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .award-list a {
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .award-list a:hover {
+    color: var(--blume-accent);
+  }
+  .award-list .student {
+    font-size: 0.85rem;
+    color: var(--blume-muted-foreground, #6b6660);
+  }
+</style>

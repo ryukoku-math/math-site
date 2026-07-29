@@ -1,0 +1,14 @@
+---
+title: "「畳み込みオートエンコーダとVQ-VAEで得られる特徴量の比較」"
+authors: "岸田将季"
+seo:
+  description: "データから本質的な情報を取り出す操作を特徴抽出と呼ぶ。特徴抽出の方法の一つにオートエンコーダというニューラルネットを用いた方法がある。オートエンコーダは、特徴抽出を行うエンコーダ部と、特徴量からデータを復元するデコーダ部から構成される。本研…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+データから本質的な情報を取り出す操作を特徴抽出と呼ぶ。特徴抽出の方法の一つにオートエンコーダというニューラルネットを用いた方法がある。オートエンコーダは、特徴抽出を行うエンコーダ部と、特徴量からデータを復元するデコーダ部から構成される。本研究では畳み込みオートエンコーダとVQ-VAEの二つのオートエンコーダを用いて人の顔画像から特徴量を抽出し、両者にどのような違いがあるのかを調べた。その結果、畳み込みオートエンコーダと比較してVQ-VAEでは、特徴量を構成する各ベクトルがより広い範囲の画素を表しており、それぞれのベクトルの復元結果を混ぜ合わせるようにして画像全体を復元していることがわかった。
+
+<SlideGallery images={["/images/awards/2021/undergrad-4ec73d/01.png","/images/awards/2021/undergrad-4ec73d/02.png","/images/awards/2021/undergrad-4ec73d/03.png","/images/awards/2021/undergrad-4ec73d/04.png","/images/awards/2021/undergrad-4ec73d/05.png","/images/awards/2021/undergrad-4ec73d/06.png","/images/awards/2021/undergrad-4ec73d/07.png","/images/awards/2021/undergrad-4ec73d/08.png","/images/awards/2021/undergrad-4ec73d/09.png"]} />
+

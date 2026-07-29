@@ -1,0 +1,17 @@
+---
+// Shrinks and clamps the page's <h1> to 3 lines — used on News/Award detail
+// pages where the frontmatter `title` can run long. Rendered by the generated
+// [...slug].astro template outside this component's own tree, so the rule
+// needs `is:global` rather than Astro's default scoped styles.
+---
+
+<style is:global>
+  article.prose h1 {
+    font-size: 1.375rem;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+</style>

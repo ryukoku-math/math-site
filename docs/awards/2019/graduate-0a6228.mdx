@@ -1,0 +1,14 @@
+---
+title: "「敵対的生成ネットワークによる画像中の人体の教師なし姿勢変換」"
+authors: "岡林遥平"
+seo:
+  description: "本研究では，教師なし学習するニューラルネットワーク(NN)を用いた姿勢変換手法について検討した．姿勢変換とは，人物の画像(元画像)と目標とする姿勢情報(目標姿勢)から，その人物に目標姿勢をとらせた画像を生成する操作のことである．従来の手法で…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究では，教師なし学習するニューラルネットワーク(NN)を用いた姿勢変換手法について検討した．姿勢変換とは，人物の画像(元画像)と目標とする姿勢情報(目標姿勢)から，その人物に目標姿勢をとらせた画像を生成する操作のことである．従来の手法では教師あり学習を用いていたが，NNの学習のために正解画像を大量に用意しなければならないという問題点があった．そこで本研究では，教師なし学習に基づく新しい姿勢変換手法を検討した．この手法では，EncoderとGeneratorの2つのNNを用いて姿勢を変換する．Encoderは，元画像とその姿勢情報から，頭部や胴体などのパーツに対応した符号ベクトルを求める．Generatorは，符号ベクトルと目標姿勢から姿勢変換結果を出力する．大規模な画像データセットを用いた実験を行った結果，うまく姿勢変換できることがわかった．
+
+<SlideGallery images={["/images/awards/2019/graduate-0a6228/01.png","/images/awards/2019/graduate-0a6228/02.png","/images/awards/2019/graduate-0a6228/03.png","/images/awards/2019/graduate-0a6228/04.png","/images/awards/2019/graduate-0a6228/05.png","/images/awards/2019/graduate-0a6228/06.png","/images/awards/2019/graduate-0a6228/07.png","/images/awards/2019/graduate-0a6228/08.png","/images/awards/2019/graduate-0a6228/09.png"]} />
+

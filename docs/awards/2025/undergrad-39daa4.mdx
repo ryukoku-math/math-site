@@ -1,0 +1,14 @@
+---
+title: "「物体検出モデルと画像基盤モデルの組み合わせによる Zero-shot セマンティックセグメンテーション」"
+authors: "松村壮吾"
+seo:
+  description: "本研究は、追加学習や画素単位のアノテーションを必要としない Zero-shot セマンティックセグメンテーション手法の構築を目的とする。テキスト入力により任意の物体を検出可能な YOLO-World…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本研究は、追加学習や画素単位のアノテーションを必要としない Zero-shot セマンティックセグメンテーション手法の構築を目的とする。テキスト入力により任意の物体を検出可能な YOLO-World と、高精度な領域抽出が可能な画像基盤モデル SAM を組み合わせ、前者の出力を後者のプロンプトとする手法を構築した。実験の結果、PASCAL VOC データセットにおいて mIoU 0.703 を記録し、教師ありモデルである DeepLab v3 の mIoU 0.724 に近い精度を達成した。これにより、提案手法がアノテーションコスト削減と未知クラスへの対応に有効であることを示した。
+
+<SlideGallery images={["/images/awards/2025/undergrad-39daa4/01.png","/images/awards/2025/undergrad-39daa4/02.png","/images/awards/2025/undergrad-39daa4/03.png","/images/awards/2025/undergrad-39daa4/04.png","/images/awards/2025/undergrad-39daa4/05.png","/images/awards/2025/undergrad-39daa4/06.png","/images/awards/2025/undergrad-39daa4/07.png","/images/awards/2025/undergrad-39daa4/08.png","/images/awards/2025/undergrad-39daa4/09.png"]} />
+

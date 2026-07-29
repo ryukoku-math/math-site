@@ -1,0 +1,14 @@
+---
+title: "「一人暮らしに特化したスマートホーム制御システムの開発」"
+authors: "吉村頼樹"
+seo:
+  description: "本システムは、Raspberry Pi 5（親機）とXIAO ESP32…"
+sidebar:
+  hidden: true
+---
+<TitleClamp />
+
+本システムは、Raspberry Pi 5（親機）とXIAO ESP32 C3（子機）を用いた、一人暮らし特化型のスマートホーム制御システムである。子機に搭載した各種センサー（人感、開閉、重量）により「外出・帰宅・就寝・起床」の4シーンを自動判定し 、親機のFlaskサーバーが設定に基づきSwitchBot APIで家電を制御する。ユーザーは専用のWebサイトから、シーンごとの家電の動きを設定できる 。技術的工夫として、中継機を介したESP-NOW通信により0.4秒の高速応答と約1年の電池駆動を両立させた。これにより、電源位置に縛られない実用性の高い自律型システムを実現した。
+
+<SlideGallery images={["/images/awards/2025/undergrad-248a4a/01.png","/images/awards/2025/undergrad-248a4a/02.png","/images/awards/2025/undergrad-248a4a/03.png","/images/awards/2025/undergrad-248a4a/04.png","/images/awards/2025/undergrad-248a4a/05.png","/images/awards/2025/undergrad-248a4a/06.png","/images/awards/2025/undergrad-248a4a/07.png","/images/awards/2025/undergrad-248a4a/08.png","/images/awards/2025/undergrad-248a4a/09.png","/images/awards/2025/undergrad-248a4a/10.png"]} />
+

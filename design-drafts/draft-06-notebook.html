@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数理・情報科学課程｜龍谷大学 先端理工学部</title>
+<style>
+  :root{
+    --paper:#FFFDF7;
+    --rule:#E3DFD3;
+    --margin-red:#F0B8B8;
+    --ink:#4A4A46;
+    --ink-strong:#2E2E2A;
+    --brand-red:#F50000;
+    --highlighter:#FFF3A3;
+    --line-height-rule: 2rem;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--line-height-rule) - 1px),
+        var(--rule) calc(var(--line-height-rule) - 1px),
+        var(--rule) var(--line-height-rule)
+      );
+    background-attachment: local;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: var(--line-height-rule);
+    position: relative;
+  }
+
+  /* margin rule (the red vertical line), offset so it doesn't collide with content on mobile */
+  .page{
+    position:relative;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 1.75rem 0 3.25rem;
+  }
+
+  .page::before{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    left: 2.1rem;
+    width: 2px;
+    background: var(--margin-red);
+  }
+
+  @media (max-width: 620px){
+    .page{ padding: 0 1.1rem 0 2.1rem; }
+    .page::before{ left: 1.15rem; }
+  }
+
+  a{ color: inherit; }
+  a:focus-visible, button:focus-visible, .tab:focus-visible{
+    outline: 3px solid var(--brand-red);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1,h2,h3{
+    font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+    font-weight: 600;
+    color: var(--ink-strong);
+    margin: 0;
+  }
+
+  .serif-label{
+    font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+    font-weight: 600;
+  }
+
+  /* ---------- Header / hero (first page of the notebook) ---------- */
+  header.hero{
+    padding-top: 2rem;
+    position: relative;
+  }
+
+  .logo-sticker{
+    display:inline-block;
+    background: #fff;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid #e7e2d3;
+    box-shadow: 2px 3px 6px rgba(0,0,0,0.08);
+    transform: rotate(-2deg);
+    margin-bottom: 1.5rem;
+  }
+  .logo-sticker img{
+    display:block;
+    height: 34px;
+    width: auto;
+  }
+
+  .breadcrumb{
+    font-size: 0.85rem;
+    color: var(--ink);
+    opacity: 0.75;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.02em;
+  }
+
+  h1.title{
+    font-size: clamp(2rem, 6vw, 3.1rem);
+    line-height: 1.25;
+    display: inline-block;
+    padding-bottom: 0.15em;
+    background-image:
+      linear-gradient(var(--brand-red), var(--brand-red)),
+      linear-gradient(var(--brand-red), var(--brand-red));
+    background-repeat: no-repeat;
+    background-size: 100% 2.5px, 92% 2.5px;
+    background-position: bottom 0px left, bottom -7px left 2%;
+  }
+
+  .subtitle-en{
+    margin-top: 0.9rem;
+    font-size: 0.95rem;
+    color: var(--ink);
+    opacity: 0.8;
+    font-style: italic;
+  }
+
+  /* margin-note excerpt intro paragraph */
+  .margin-note{
+    position: relative;
+    margin: 2.5rem 0 2.5rem 0;
+    padding: 0.2rem 0 0.2rem 1.5rem;
+    max-width: 62ch;
+  }
+  .margin-note::before{
+    /* red bracket */
+    content:"";
+    position:absolute;
+    left: -0.15rem;
+    top: 0.15rem;
+    bottom: 0.15rem;
+    width: 0.65rem;
+    border-left: 3px solid var(--brand-red);
+    border-top: 3px solid var(--brand-red);
+    border-bottom: 3px solid var(--brand-red);
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+  }
+  .margin-note p{
+    margin:0;
+  }
+
+  .highlight-circle{
+    position: relative;
+    white-space: normal;
+  }
+  .highlight-circle svg{
+    position:absolute;
+    left: -6%;
+    top: -22%;
+    width: 112%;
+    height: 150%;
+    pointer-events:none;
+    overflow: visible;
+  }
+
+  .highlighter{
+    background: linear-gradient(180deg, transparent 55%, var(--highlighter) 55%, var(--highlighter) 92%, transparent 92%);
+    padding: 0 0.05em;
+  }
+
+  /* ---------- Nav "index" tabs ---------- */
+  .index-wrap{
+    margin: 2.75rem 0 3rem 0;
+  }
+  .index-title{
+    font-size: 1rem;
+    color: var(--ink);
+    opacity: 0.7;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  .tabs{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap: 0.6rem;
+  }
+
+  .tab{
+    display:flex;
+    align-items:baseline;
+    gap: 0.9rem;
+    text-decoration:none;
+    color: var(--ink-strong);
+    background: #fff;
+    border: 1px solid #ece6d6;
+    border-right: none;
+    border-radius: 3px 0 0 3px;
+    padding: 0.85rem 1rem 0.85rem 1.1rem;
+    box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
+    position: relative;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .tab{ transition:none; }
+  }
+  .tab:hover{
+    transform: translateX(4px);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.1);
+  }
+
+  /* sticky-tab colored edge, cycling colors like index tabs */
+  .tab::after{
+    content:"";
+    position:absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 70%;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.12);
+  }
+  .tab:nth-child(1)::after{ background:#F7C6C6; }
+  .tab:nth-child(2)::after{ background:#F7E3A1; }
+  .tab:nth-child(3)::after{ background:#C6E3D6; }
+  .tab:nth-child(4)::after{ background:#C6D8F7; }
+  .tab:nth-child(5)::after{ background:#DCC6F0; }
+
+  .tab .num{
+    font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
+    font-weight:600;
+    font-size: 0.85rem;
+    opacity: 0.55;
+    flex-shrink:0;
+  }
+  .tab .label-group h3{
+    font-size: 1.08rem;
+    margin-bottom: 0.15rem;
+  }
+  .tab .label-group p{
+    margin:0;
+    font-size: 0.85rem;
+    opacity:0.75;
+    line-height:1.5;
+  }
+
+  @media (max-width: 620px){
+    .tabs{ gap: 0.9rem; }
+    .tab{
+      border-right: 1px solid #ece6d6;
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+    }
+    .tab::after{ display:none; }
+  }
+
+  /* ---------- Section generic ---------- */
+  section{
+    margin: 3.5rem 0;
+  }
+
+  .page-tab-heading{
+    display:inline-flex;
+    align-items:center;
+    gap:0.6rem;
+    background: #FFF6DC;
+    border: 1px solid #EADFAF;
+    padding: 0.45rem 1.1rem;
+    border-radius: 4px;
+    box-shadow: 1px 2px 3px rgba(0,0,0,0.06);
+    transform: rotate(-0.6deg);
+    margin-bottom: 1.6rem;
+  }
+  .page-tab-heading h2{
+    font-size: 1.4rem;
+  }
+  .page-tab-heading .pin{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--brand-red);
+    flex-shrink:0;
+  }
+
+  /* checklist */
+  .checklist{
+    list-style:none;
+    margin:0;
+    padding:0;
+    max-width: 62ch;
+  }
+  .checklist li{
+    position:relative;
+    padding-left: 2rem;
+    margin-bottom: 0.9rem;
+    line-height:1.6;
+  }
+  .checklist li::before{
+    content:"☑";
+    position:absolute;
+    left:0;
+    top:0;
+    color: var(--brand-red);
+    font-size: 1.1rem;
+  }
+
+  /* open lab class-notes block */
+  .class-notes{
+    background:#fff;
+    border:1px solid #ece6d6;
+    border-radius:4px;
+    padding: 1.4rem 1.6rem;
+    max-width: 62ch;
+    box-shadow: 1px 2px 5px rgba(0,0,0,0.05);
+    transform: rotate(0.3deg);
+  }
+  .class-notes .lead{
+    font-size:0.8rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    opacity:0.6;
+    margin-bottom:0.6rem;
+  }
+  .class-notes ul{
+    margin:0;
+    padding-left:1.2rem;
+  }
+  .class-notes li{
+    margin-bottom:0.5rem;
+  }
+  .class-notes .lab{
+    opacity:0.65;
+    font-size:0.9rem;
+  }
+
+  /* faculty contact list */
+  .faculty-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.4rem 1.6rem;
+  }
+  .contact-card{
+    display:flex;
+    gap:0.9rem;
+    align-items:flex-start;
+    background:#fff;
+    border:1px solid #ece6d6;
+    border-radius:4px;
+    padding: 0.9rem;
+    box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
+  }
+  .contact-card .photo{
+    width:64px;
+    height:64px;
+    flex-shrink:0;
+    object-fit:cover;
+    border-radius:3px;
+    border: 1px solid #e2ddcc;
+    background:#f4f1e8;
+  }
+  .contact-card .info h3{
+    font-size:1rem;
+    margin-bottom:0.2rem;
+  }
+  .contact-card .info .role{
+    font-size:0.82rem;
+    opacity:0.7;
+    margin-bottom:0.2rem;
+  }
+  .contact-card .info .field{
+    font-size:0.82rem;
+    opacity:0.85;
+  }
+  .faculty-note{
+    font-size:0.85rem;
+    opacity:0.65;
+    margin-top:1rem;
+    font-style:italic;
+  }
+
+  /* access / last page */
+  .access-card{
+    background:#FFF6DC;
+    border:1px dashed #D8B85A;
+    border-radius:4px;
+    padding:1.4rem 1.6rem;
+    max-width:52ch;
+  }
+  .access-card dl{
+    margin:0;
+    display:grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 1rem;
+    font-size:0.92rem;
+  }
+  .access-card dt{
+    opacity:0.6;
+    white-space:nowrap;
+  }
+  .access-card dd{
+    margin:0;
+  }
+
+  footer{
+    margin-top: 4rem;
+    padding: 2rem 0 3rem 0;
+    font-size:0.8rem;
+    opacity:0.55;
+  }
+
+  .visually-hidden{
+    position:absolute;
+    width:1px;height:1px;
+    padding:0;margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="logo-sticker">
+      <img src="images/advanced_rgb_hj.png" alt="龍谷大学 先端理工学部 ロゴ">
+    </div>
+
+    <p class="breadcrumb">龍谷大学 先端理工学部</p>
+    <h1 class="title">数理・情報科学課程</h1>
+    <p class="subtitle-en">Applied Mathematics and Informatics Course, Faculty of Advanced Science and Technology</p>
+
+    <div class="margin-note">
+      <p>
+        複雑で変化の激しい現代の科学技術の世界では、様々な分野が互いに関連しあいながら新しいものが生まれています。数学や情報科学は、分野の枠を越えて物事の本質にせまり、課題を分析し解決するための道具となります。数理・情報科学課程では、物事を<span class="highlight-circle">論理的に考え適切に表現する力
+          <svg viewBox="0 0 220 60" aria-hidden="true">
+            <path d="M10,32 C6,10 40,2 70,4 C120,7 190,4 208,20 C218,30 200,52 150,54 C90,57 8,50 12,34" fill="none" stroke="#FFC93C" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+        </span>、課題を数学的・数量的に分析し解決する力、IT社会に柔軟に対応し活躍できる力を備えた人材の育成を目指します。
+      </p>
+    </div>
+
+    <nav class="index-wrap" aria-label="ページ内目次">
+      <p class="index-title serif-label">— さくいん index —</p>
+      <ul class="tabs">
+        <li>
+          <a class="tab" href="#about">
+            <span class="num">01</span>
+            <span class="label-group">
+              <h3>数理・情報学課程とは</h3>
+              <p>課程の教育方針や学びの特色を紹介</p>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="tab" href="#research">
+            <span class="num">02</span>
+            <span class="label-group">
+              <h3>研究・教育</h3>
+              <p>数学・情報科学の研究室紹介</p>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="tab" href="#faculty">
+            <span class="num">03</span>
+            <span class="label-group">
+              <h3>課程担当教員</h3>
+              <p>17名の教員紹介</p>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="tab" href="#admissions">
+            <span class="num">04</span>
+            <span class="label-group">
+              <h3>入学・進路</h3>
+              <p>入試情報・卒業後の進路</p>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="tab" href="#videos">
+            <span class="num">05</span>
+            <span class="label-group">
+              <h3>課程動画集</h3>
+              <p>課程紹介の動画まとめ</p>
+            </span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="about">
+    <div class="page-tab-heading"><span class="pin"></span><h2>学びのメモ — 気になること一覧</h2></div>
+    <ul class="checklist">
+      <li><span class="highlighter">優秀プレゼンテーション賞</span>がある —— 発表の腕試しができる</li>
+      <li>センタンLAB（先端理工学部スペシャルサイト）をチェック</li>
+      <li>21の学びのプログラム（データサイエンス・人工知能・情報科学・数理解析・現象の数理）</li>
+      <li>BYOD（ノートPC必携化）——入学したら自分のPCで学ぶ</li>
+      <li>R-Gap・プロジェクトリサーチ：約3ヶ月間（3年次の6月中旬〜9月中旬）の<span class="highlighter">自主活動期間</span></li>
+      <li>STEAMコモンズ：「ものづくり」と「デザイン」のためのファブ施設</li>
+    </ul>
+  </section>
+
+  <section id="research">
+    <div class="page-tab-heading"><span class="pin"></span><h2>授業ノート — オープンラボが面白かった話</h2></div>
+    <div class="class-notes">
+      <p class="lead">covered in open lab</p>
+      <ul>
+        <li>「分散アルゴリズムを学ぼう」<span class="lab">（角川研究室）</span></li>
+        <li>「画像AIで遊ぼう！」<span class="lab">（馬研究室）</span></li>
+        <li>「高校数学と大学数学の違い」<span class="lab">（深尾研究室）</span></li>
+        <li>「AIで農業支援！」<span class="lab">（佐野研究室）</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="faculty">
+    <div class="page-tab-heading"><span class="pin"></span><h2>友達リスト — 教員紹介</h2></div>
+    <div class="faculty-grid">
+      <div class="contact-card">
+        <img class="photo" src="images/sano.png" alt="佐野彰 先生の写真">
+        <div class="info">
+          <h3>佐野彰</h3>
+          <p class="role">助教</p>
+          <p class="field">人工認知・数理脳科学</p>
+        </div>
+      </div>
+      <div class="contact-card">
+        <img class="photo" src="images/fukao.png" alt="深尾武史 先生の写真">
+        <div class="info">
+          <h3>深尾武史</h3>
+          <p class="role">教授</p>
+          <p class="field">発展方程式</p>
+        </div>
+      </div>
+      <div class="contact-card">
+        <img class="photo" src="images/takahashi.png" alt="高橋隆史 先生の写真">
+        <div class="info">
+          <h3>高橋隆史</h3>
+          <p class="role">准教授</p>
+          <p class="field">人工知能（機械学習、パターン認識）</p>
+        </div>
+      </div>
+      <div class="contact-card">
+        <img class="photo" src="images/qma.png" alt="馬青 先生の写真">
+        <div class="info">
+          <h3>馬青</h3>
+          <p class="role">教授</p>
+          <p class="field">自然言語処理（知能情報学）</p>
+        </div>
+      </div>
+      <div class="contact-card">
+        <img class="photo" src="images/kakugawa.png" alt="角川裕次 先生の写真">
+        <div class="info">
+          <h3>角川裕次</h3>
+          <p class="role">教授</p>
+          <p class="field">分散アルゴリズム</p>
+        </div>
+      </div>
+      <div class="contact-card">
+        <img class="photo" src="images/higuchi.png" alt="樋口三郎 先生の写真">
+        <div class="info">
+          <h3>樋口三郎</h3>
+          <p class="role">准教授</p>
+          <p class="field">統計力学（物理）・教育工学</p>
+        </div>
+      </div>
+    </div>
+    <p class="faculty-note">※ 課程担当教員17名のうち6名を掲載。全員の紹介は「課程担当教員」ページへ。</p>
+  </section>
+
+  <section id="admissions">
+    <div class="page-tab-heading"><span class="pin"></span><h2>入学・進路メモ</h2></div>
+    <p style="max-width:62ch;">入試情報や卒業後の進路については、専用ページで詳しく紹介しています。オープンキャンパスや個別相談も随時受け付けています。</p>
+  </section>
+
+  <section id="videos">
+    <div class="page-tab-heading"><span class="pin"></span><h2>課程動画集</h2></div>
+    <p style="max-width:62ch;">課程の雰囲気や研究室の様子がわかる紹介動画をまとめています。入学後のイメージをつかむのにおすすめです。</p>
+  </section>
+
+  <section id="access">
+    <div class="page-tab-heading"><span class="pin"></span><h2>最後のページ — アクセス</h2></div>
+    <div class="access-card">
+      <dl>
+        <dt>窓口</dt><dd>数理・情報科学課程事務室</dd>
+        <dt>住所</dt><dd>〒520-2194 滋賀県大津市瀬田大江町横谷1-5</dd>
+        <dt>メール</dt><dd><a href="mailto:jimu@math.ryukoku.ac.jp">jimu@math.ryukoku.ac.jp</a></dd>
+        <dt>電話</dt><dd><a href="tel:077-543-7523">077-543-7523</a></dd>
+      </dl>
+    </div>
+  </section>
+
+  <footer>
+    <p>龍谷大学 先端理工学部 数理・情報科学課程</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

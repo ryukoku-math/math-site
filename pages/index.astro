@@ -1,0 +1,692 @@
+---
+import PageLayout from "blume/components/layout/PageLayout.astro";
+import data from "blume:data";
+import { getCollection } from "astro:content";
+
+const { config } = data;
+const routeById = new Map(data.routes.map((route) => [route.entryId, route.path]));
+
+const navItems = [
+  {
+    href: "/about",
+    title: "数理・情報学課程とは",
+    desc: "課程の教育方針や学びの特色を紹介します。",
+  },
+  {
+    href: "/admission",
+    title: "入学・進路",
+    desc: "入試情報と卒業後の進路を紹介します。",
+  },
+  {
+    href: "/faculty",
+    title: "課程担当教員",
+    desc: "17名の教員を紹介します。",
+  },
+  {
+    href: "/research",
+    title: "研究・教育",
+    desc: "数学・情報科学の研究室を紹介します。",
+  },
+  {
+    href: "/videos",
+    title: "課程動画集",
+    desc: "課程紹介の動画をまとめて視聴できます。",
+  },
+];
+
+const topics = [
+  { text: "優秀プレゼンテーション賞", href: "/awards" },
+  {
+    text: "センタンLAB（先端理工学部スペシャルサイト）",
+    href: "https://sentan.rikou.ryukoku.ac.jp/",
+  },
+];
+
+// 秋のオープンキャンパスでは、夏と同じ企画のうち最初の2つ(全日程開催のブース系)のみ実施。
+const openCampusDates = [
+  { key: "summer", label: "夏のオープンキャンパス", dates: "8/1（土）・8/2（日）・8/22（土）・8/23（日）" },
+  { key: "autumn", label: "秋のオープンキャンパス", dates: "9/20（日）" },
+];
+
+const openCampusPrograms = [
+  {
+    seasons: ["summer", "autumn"],
+    when: "全日程",
+    title: "AIでできること",
+    desc: "最近のAI技術を活用して、世の中の役に立つようなシステムを作っています。4年生が実際に構築しているAIシステムをいくつか紹介します。",
+  },
+  {
+    seasons: ["summer", "autumn"],
+    when: "全日程",
+    title: "数理・情報科学課程なんでも相談ブース",
+    desc: "数理・情報科学課程での4年間の学修内容や教職免許取得や卒業後の進路から日々のキャンパスライフまで、在学生が本音でお答えします。",
+  },
+  {
+    seasons: ["summer"],
+    when: "8/1・8/23",
+    title: "高校数学と大学数学の違い「－卒研、プロジェクト研究の紹介－」",
+    desc: "「自然数とは何ですか？」「面積とは何ですか？」小学校で学んだ内容を例に、高校数学と大学数学の視点の違いを紹介します。並行して大学生・大学院生による研究活動・セミナーを公開します。",
+  },
+  {
+    seasons: ["summer"],
+    when: "8/22",
+    title: "Chat UIとAIで人間の学習を支援する",
+    desc: "Web、Chat、LLMなどを使用して、人間の学習や学校DXを支援するシステムのデモを行います。",
+  },
+  {
+    seasons: ["summer"],
+    when: "全日程",
+    title: "研究室ライブセミナー",
+    desc: "研究室セミナーを生公開します。課程での普段の研究活動の様子を自由に観覧・参加していただけます。（11:00–12:00／13:00–14:00）",
+    sub: [
+      { when: "8/1", text: "深尾研究室（数学）" },
+      { when: "8/2", text: "佐野研究室（情報）" },
+      { when: "8/22", text: "樋口研究室（データサイエンス）" },
+      { when: "8/23", text: "深尾研究室（数学）" },
+    ],
+  },
+];
+
+const OC_SEASON_LABEL = { summer: "夏", autumn: "秋" };
+
+// `date:` frontmatter comes back as a native Date (YAML's implicit date
+// coercion), not a string — format it explicitly rather than rendering
+// Date#toString()'s verbose output.
+const formatDate = (d: unknown) => new Date(d as string).toISOString().slice(0, 10);
+
+const news = (await getCollection("docs"))
+  .filter((entry) => entry.id.startsWith("news/") && !entry.data.draft)
+  .map((entry) => ({
+    date: formatDate(entry.data.date),
+    title: entry.data.title,
+    href: routeById.get(entry.id),
+  }))
+  .toSorted((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)))
+  .slice(0, 5);
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  favicon={config.favicon}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  page={{
+    title: config.title,
+    description: config.description,
+    route: "/",
+  }}
+>
+  <div class="page">
+    <main id="main-content">
+      <header class="hero">
+        <div class="hero-logo-plate">
+          <img
+            class="hero-logo"
+            src="/images/advanced_rgb_hj.png"
+            width="220"
+            height="60"
+            alt="龍谷大学 先端理工学部"
+          />
+        </div>
+        <nav class="breadcrumb" aria-label="パンくずリスト">
+          <a href="https://www.ryukoku.ac.jp">龍谷大学</a><span class="sep">›</span>
+          <a href="https://www.rikou.ryukoku.ac.jp">先端理工学部</a><span class="sep">›</span>
+          <span aria-current="page">数理・情報科学課程</span>
+        </nav>
+        <h1 class="site-title">数理・情報科学課程</h1>
+        <p class="subtitle-en">
+          Applied Mathematics and Informatics Course, Faculty of Advanced
+          Science and Technology
+        </p>
+      </header>
+
+      <section id="nav-cards" aria-labelledby="nav-cards-heading">
+        <h2 id="nav-cards-heading" class="section-heading">課程を知る</h2>
+        <div class="nav-grid">
+          {
+            navItems.map((item) => (
+              <a class="card" href={item.href}>
+                <h3>{item.title}</h3>
+                <p>{item.desc}</p>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+
+      <section id="open-campus" aria-labelledby="open-campus-heading">
+        <h2 id="open-campus-heading" class="section-heading">2026 オープンキャンパス</h2>
+        {
+          openCampusDates.map((season) => (
+            <p class={`oc-dates oc-dates--${season.key}`}>
+              {season.label}　{season.dates}開催
+            </p>
+          ))
+        }
+        <div class="callout">
+          <div class="callout-label">まなびエキスポ／オープンラボ（体育館・10:00〜15:00、夏開催時）</div>
+          <ul>
+            {
+              openCampusPrograms.map((item) => (
+                <li>
+                  <div class="oc-item-head">
+                    <span class="oc-season-tags">
+                      {item.seasons.map((s) => (
+                        <span class={`oc-tag oc-tag--${s}`}>{OC_SEASON_LABEL[s]}</span>
+                      ))}
+                    </span>
+                    <span class="oc-badge">{item.when}</span>
+                    <strong class="oc-title">{item.title}</strong>
+                  </div>
+                  <p class="oc-desc">{item.desc}</p>
+                  {item.sub && (
+                    <ul class="oc-sub">
+                      {item.sub.map((s) => (
+                        <li>
+                          <span class="oc-badge oc-badge-sm">{s.when}</span>
+                          {s.text}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))
+            }
+          </ul>
+          <a class="link-more" href="https://sentan.rikou.ryukoku.ac.jp/oc_oplab/">
+            オープンキャンパスの詳細 ›
+          </a>
+        </div>
+      </section>
+
+      <section id="topics" aria-labelledby="topics-heading">
+        <h2 id="topics-heading" class="section-heading">トピックス</h2>
+        <ul class="topics-list">
+          {
+            topics.map((t) => (
+              <li>
+                <a href={t.href}>{t.text}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section id="news" aria-labelledby="news-heading">
+        <h2 id="news-heading" class="section-heading">News</h2>
+        <ul class="news-teaser">
+          {
+            news.map((item) => (
+              <li>
+                <time datetime={String(item.date)}>{item.date}</time>
+                <a href={item.href}>{item.title}</a>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="link-more" href="/news">Newsをもっと見る ›</a>
+      </section>
+
+      <section id="access" aria-labelledby="access-heading">
+        <h2 id="access-heading" class="section-heading">アクセス</h2>
+        <div class="access-box">
+          <dl>
+            <dt>事務室</dt>
+            <dd>数理・情報科学課程事務室</dd>
+            <dt>所在地</dt>
+            <dd>
+              〒520-2194 滋賀県大津市瀬田大江町横谷1-5<br />龍谷大学瀬田学舎1号館5階535号室
+            </dd>
+            <dt>メール</dt>
+            <dd>
+              <a href="mailto:jimu@math.ryukoku.ac.jp">jimu@math.ryukoku.ac.jp</a>
+            </dd>
+            <dt>電話</dt>
+            <dd>077-543-7523</dd>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail" aria-label="ページ内目次">
+      <div class="rail-label">目次</div>
+      <ul>
+        <li><a href="#nav-cards">課程を知る</a></li>
+        <li><a href="#open-campus">オープンキャンパス</a></li>
+        <li><a href="#topics">トピックス</a></li>
+        <li><a href="#news">News</a></li>
+        <li><a href="#access">アクセス</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <footer slot="footer">
+    <div class="inner">
+      <p>龍谷大学 先端理工学部 数理・情報科学課程</p>
+      <p>〒520-2194 滋賀県大津市瀬田大江町横谷1-5</p>
+    </div>
+  </footer>
+</PageLayout>
+
+<style>
+  .page {
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 14rem;
+    gap: 3rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .page {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  main {
+    min-width: 0;
+    padding-top: 2.5rem;
+    padding-bottom: 5rem;
+  }
+
+  .hero {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--blume-border);
+    margin-bottom: 3rem;
+  }
+  .hero-logo-plate {
+    display: inline-block;
+    /* The official logo PNG is opaque white with black Japanese text baked
+       in (no alpha channel) — always give it a white plate rather than let
+       it sit directly on a dark background, where it reads as a stray box. */
+    background: #fff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+  }
+  .hero-logo {
+    display: block;
+    height: 56px;
+    width: auto;
+  }
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+  }
+  .breadcrumb a {
+    color: var(--blume-muted-foreground, #6b6660);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover {
+    color: var(--blume-accent);
+  }
+  .breadcrumb .sep {
+    color: var(--blume-border);
+  }
+  h1.site-title {
+    font-family: var(--blume-font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    line-height: 1.3;
+    margin: 0 0 0.6rem 0;
+    letter-spacing: 0.01em;
+  }
+  .subtitle-en {
+    font-family: var(--blume-font-display);
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    margin: 0;
+  }
+
+  h2.section-heading {
+    font-family: var(--blume-font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0 0 1.25rem 0;
+    scroll-margin-top: 1.5rem;
+  }
+  section {
+    margin-bottom: 3.5rem;
+  }
+  section:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .nav-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  @media (max-width: 820px) {
+    .nav-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 520px) {
+    .nav-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .card {
+    display: block;
+    background: var(--blume-background, #fff);
+    border: 1px solid var(--blume-border);
+    border-top: 3px solid transparent;
+    border-radius: 10px;
+    padding: 1.5rem 1.35rem;
+    text-decoration: none;
+    color: inherit;
+    transition:
+      border-top-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .card:hover,
+  .card:focus-visible {
+    border-top-color: var(--blume-accent);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+  }
+  .card h3 {
+    font-family: var(--blume-font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem 0;
+  }
+  .card p {
+    font-size: 0.9rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    margin: 0;
+    line-height: 1.7;
+  }
+
+  .topics-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--blume-border);
+  }
+  .topics-list li {
+    border-bottom: 1px solid var(--blume-border);
+  }
+  .topics-list li > a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 0.25rem;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.98rem;
+  }
+  .topics-list a:hover {
+    color: var(--blume-accent);
+  }
+  .topics-list li > a::before {
+    content: "";
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--blume-accent);
+  }
+
+  .callout {
+    background: var(--blume-muted);
+    border: 1px solid var(--blume-border);
+    border-left: 4px solid var(--blume-accent);
+    border-radius: 8px;
+    padding: 1.5rem 1.75rem;
+  }
+  .callout-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--blume-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.75rem;
+  }
+  .callout ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .callout li {
+    margin-bottom: 0.5rem;
+  }
+  .callout li:last-child {
+    margin-bottom: 0;
+  }
+  .oc-dates {
+    font-family: var(--blume-font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0 0 0.4rem;
+  }
+  .oc-dates:last-of-type {
+    margin-bottom: 1.25rem;
+  }
+  .oc-dates--summer {
+    color: var(--blume-accent);
+  }
+  /* 秋のオープンキャンパスは夏(ブランドの赤)と見分けがつくよう暖色のオレンジに */
+  .oc-dates--autumn {
+    color: #b45309;
+  }
+
+  .callout .oc-item-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .oc-season-tags {
+    display: inline-flex;
+    gap: 0.3rem;
+    flex: none;
+  }
+  .oc-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.4;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    color: #fff;
+  }
+  .oc-tag--summer {
+    background: var(--blume-accent);
+  }
+  .oc-tag--autumn {
+    background: #b45309;
+  }
+  .callout .oc-badge {
+    display: inline-block;
+    flex: none;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--blume-muted-foreground, #6b6660);
+    background: var(--blume-background, #fff);
+    border: 1px solid var(--blume-border);
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .callout .oc-title {
+    font-size: 0.98rem;
+  }
+  .callout .oc-desc {
+    margin: 0.3rem 0 0;
+    font-size: 0.85rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    line-height: 1.7;
+  }
+  .callout .oc-sub {
+    margin: 0.5rem 0 0;
+    padding-left: 0;
+    list-style: none;
+  }
+  .callout .oc-sub li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--blume-muted-foreground, #6b6660);
+  }
+  .callout .oc-sub li:last-child {
+    margin-bottom: 0;
+  }
+  .callout .oc-badge-sm {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.45rem;
+  }
+
+  .news-teaser {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--blume-border);
+  }
+  .news-teaser li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.9rem 0.25rem;
+    border-bottom: 1px solid var(--blume-border);
+  }
+  .news-teaser time {
+    font-size: 0.8rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    flex: none;
+  }
+  .news-teaser a {
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.98rem;
+  }
+  .news-teaser a:hover {
+    color: var(--blume-accent);
+  }
+  .link-more {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--blume-accent);
+    text-decoration: none;
+  }
+  .link-more:hover {
+    text-decoration: underline;
+  }
+
+  .access-box {
+    background: var(--blume-muted);
+    border: 1px solid var(--blume-border);
+    border-radius: 10px;
+    padding: 1.75rem;
+    font-size: 0.95rem;
+  }
+  .access-box dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    row-gap: 0.6rem;
+    column-gap: 1rem;
+  }
+  .access-box dt {
+    color: var(--blume-muted-foreground, #6b6660);
+    font-weight: 500;
+  }
+  .access-box dd {
+    margin: 0;
+  }
+
+  .rail {
+    position: sticky;
+    top: 2rem;
+    padding-top: 2.5rem;
+    font-size: 0.85rem;
+  }
+  .rail-label {
+    font-family: var(--blume-font-display);
+    font-weight: 700;
+    color: var(--blume-muted-foreground, #6b6660);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    margin-bottom: 0.9rem;
+  }
+  .rail ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--blume-border);
+  }
+  .rail li a {
+    display: block;
+    padding: 0.4rem 0 0.4rem 1rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    margin-left: -2px;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .rail li a:hover,
+  .rail li a:focus-visible {
+    color: var(--blume-accent);
+    border-left-color: var(--blume-accent);
+  }
+  @media (max-width: 900px) {
+    .rail {
+      position: static;
+      padding-top: 0;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--blume-border);
+      padding-bottom: 1.5rem;
+    }
+    .rail ul {
+      display: flex;
+      flex-wrap: wrap;
+      border-left: none;
+      gap: 0.25rem 1rem;
+    }
+    .rail li a {
+      border-left: none;
+      padding: 0.25rem 0;
+      border-bottom: 2px solid transparent;
+    }
+    .rail li a:hover,
+    .rail li a:focus-visible {
+      border-bottom-color: var(--blume-accent);
+    }
+  }
+
+  footer {
+    border-top: 1px solid var(--blume-border);
+    background: var(--blume-muted);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: var(--blume-muted-foreground, #6b6660);
+    font-size: 0.85rem;
+  }
+  footer .inner {
+    max-width: 74rem;
+    margin: 0 auto;
+  }
+</style>

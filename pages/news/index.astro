@@ -1,0 +1,81 @@
+---
+import { getCollection } from "astro:content";
+import RootLayout from "blume/components/layout/RootLayout.astro";
+import data from "blume:data";
+
+const { config } = data;
+const routeById = new Map(data.routes.map((route) => [route.entryId, route.path]));
+
+// `date:` frontmatter comes back as a native Date (YAML's implicit date
+// coercion), not a string — format it explicitly rather than rendering
+// Date#toString()'s verbose output.
+const formatDate = (d: unknown) => new Date(d as string).toISOString().slice(0, 10);
+
+const posts = (await getCollection("docs"))
+  .filter((entry) => entry.id.startsWith("news/") && !entry.data.draft)
+  .map((entry) => ({
+    date: formatDate(entry.data.date),
+    description: entry.data.description,
+    href: routeById.get(entry.id),
+    title: entry.data.title,
+  }))
+  .toSorted((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)));
+---
+
+<RootLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  navigation={data.navigation}
+  page={{ title: "News", description: "課程の活動・受賞・イベントのお知らせ", route: "/news" }}
+  headings={[]}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  indexable={true}
+>
+  <h1>News</h1>
+  <p>数理・情報科学課程の活動・受賞・イベントのお知らせです。</p>
+
+  <ul class="news-list">
+    {
+      posts.map((post) => (
+        <li>
+          <time datetime={String(post.date)}>{post.date}</time>
+          <a href={post.href}>{post.title}</a>
+          <p>{post.description}</p>
+        </li>
+      ))
+    }
+  </ul>
+</RootLayout>
+
+<style>
+  .news-list {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    border-top: 1px solid var(--blume-border);
+  }
+  .news-list li {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--blume-border);
+  }
+  .news-list time {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    margin-bottom: 0.25rem;
+  }
+  .news-list a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .news-list a:hover {
+    color: var(--blume-accent);
+  }
+  .news-list p {
+    margin: 0.35rem 0 0;
+    font-size: 0.9rem;
+    color: var(--blume-muted-foreground, #6b6660);
+  }
+</style>
