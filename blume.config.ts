@@ -21,7 +21,7 @@ export default defineConfig({
     ask: {
       enabled: true,
       provider: "openai-compatible",
-      baseUrl: "http://slab-llm:11434/v1",
+      baseUrl: "http://slab-llm.math.ryukoku.ac.jp:11434/v1",
       apiKeyEnv: "OLLAMA_API_KEY",
       model: "gemma4:e4b",
       suggestions: [
