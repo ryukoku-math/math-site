@@ -29,10 +29,15 @@ export async function onRequest(context) {
     if (originResponse.status >= 500) {
       throw new Error(`origin returned ${originResponse.status}`);
     }
-    return originResponse;
+    const proxied = new Response(originResponse.body, originResponse);
+    proxied.headers.set("x-math-proxy", "origin");
+    return proxied;
   } catch (err) {
     clearTimeout(timeout);
     // whale2に到達不能 → Pagesの静的コンテンツへフォールバック
-    return next();
+    const fallback = await next();
+    const tagged = new Response(fallback.body, fallback);
+    tagged.headers.set("x-math-proxy", `fallback:${err.message}`);
+    return tagged;
   }
 }
