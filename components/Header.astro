@@ -6,8 +6,8 @@
 // grid's right-rail nav/TOC column the way a banner nested inside the
 // content column would.
 import Header from "blume/components/layout/Header.astro";
-import fs from "node:fs";
-import path from "node:path";
+import { getEntry } from "astro:content";
+import data from "blume:data";
 
 const props = Astro.props;
 const route = props.route as string;
@@ -20,19 +20,24 @@ const MAIN_PAGE_COVERS: Record<string, string> = {
   "/videos": "/images/covers/videos.jpg",
 };
 
-// News cover images keep whatever extension the source Notion asset used
-// (jpg/png/webp) — resolved from disk rather than hardcoded per slug.
-function newsCoverFor(newsRoute: string): string | null {
-  const match = newsRoute.match(/^\/news\/([^/]+)$/);
-  if (!match) return null;
-  const slug = match[1];
-  const dir = path.join(process.cwd(), "public", "images", "news", slug);
-  if (!fs.existsSync(dir)) return null;
-  const file = fs.readdirSync(dir).find((f) => f.startsWith("cover."));
-  return file ? `/images/news/${slug}/${file}` : null;
+const routeByPath = new Map(data.routes.map((r) => [r.path, r]));
+
+// News banner image comes from the entry's own `seo.image` frontmatter —
+// the same field pages/news/index.astro reads for the card thumbnail — so
+// both places always agree on which image is best. Per-entry this is
+// whichever of the Notion-fetched cover.* (a uniform ~512px-wide render,
+// blurry once stretched into a banner) or the article's own inline photo
+// (often 1000px+) is actually higher-resolution; picked by hand once when
+// the mismatch was discovered rather than re-derived from disk here.
+async function newsCoverFor(newsRoute: string): Promise<string | null> {
+  if (!newsRoute.startsWith("/news/")) return null;
+  const route = routeByPath.get(newsRoute);
+  if (!route) return null;
+  const entry = await getEntry(route.collection as "docs", route.entryId);
+  return entry?.data.seo?.image ?? null;
 }
 
-const image = MAIN_PAGE_COVERS[route] ?? newsCoverFor(route);
+const image = MAIN_PAGE_COVERS[route] ?? (await newsCoverFor(route));
 ---
 
 <Header {...props} />
