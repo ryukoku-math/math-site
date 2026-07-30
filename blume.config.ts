@@ -3,6 +3,7 @@ import { defineConfig } from "blume";
 export default defineConfig({
   title: "数理・情報科学課程",
   description: "龍谷大学 先端理工学部 数理・情報科学課程",
+  logo: "/images/zero.png",
   feedback: false,
   theme: {
     accent: "#f50000",

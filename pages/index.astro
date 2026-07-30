@@ -123,6 +123,15 @@ const news = (await getCollection("docs"))
     route: "/",
   }}
 >
+  <div class="top-banner">
+    <img
+      src="/images/covers/home.jpg"
+      alt="龍谷大学 瀬田キャンパス"
+      width="1716"
+      height="1285"
+      loading="eager"
+    />
+  </div>
   <div class="page">
     <main id="main-content">
       <header class="hero">
@@ -295,6 +304,20 @@ const news = (await getCollection("docs"))
     min-width: 0;
     padding-top: 2.5rem;
     padding-bottom: 5rem;
+  }
+
+  .top-banner {
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+    line-height: 0;
+  }
+  .top-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 65%;
+    display: block;
   }
 
   .hero {

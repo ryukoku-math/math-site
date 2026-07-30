@@ -38,9 +38,13 @@
   [data-blume-toc] {
     grid-column: 2;
     grid-row: 2;
-    height: auto !important;
-    max-height: none !important;
-    position: static !important;
+    /* Sticky, matching the homepage's own right-rail TOC (`.rail` in
+       pages/index.astro) — stays on screen while the article scrolls,
+       instead of scrolling away with the rest of the right column. */
+    position: sticky !important;
+    top: 5rem !important;
+    height: calc(100dvh - 5rem) !important;
+    max-height: calc(100dvh - 5rem) !important;
   }
 }
 
