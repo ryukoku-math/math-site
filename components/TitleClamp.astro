@@ -2,11 +2,17 @@
 // Shrinks and clamps the page's <h1> to 3 lines — used on News/Award detail
 // pages where the frontmatter `title` can run long. Rendered by the generated
 // [...slug].astro template outside this component's own tree, so the rule
-// needs `is:global` rather than Astro's default scoped styles.
+// needs `is:global` rather than Astro's default scoped styles. Because
+// components.ts registers this component globally (usable with no import in
+// any .mdx), Astro bundles this style on every docs page regardless of
+// whether a given page actually renders <TitleClamp /> — so the selector is
+// scoped via :has() to a marker element this component renders alongside the
+// style, not just to `article.prose h1`, or every page's title would shrink.
 ---
 
+<i class="blume-title-clamp-marker" hidden></i>
 <style is:global>
-  article.prose h1 {
+  article.prose:has(.blume-title-clamp-marker) h1 {
     font-size: 1.375rem;
     line-height: 1.45;
     display: -webkit-box;

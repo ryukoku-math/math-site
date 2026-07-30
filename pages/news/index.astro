@@ -18,6 +18,7 @@ const posts = (await getCollection("docs"))
     description: entry.data.description,
     href: routeById.get(entry.id),
     title: entry.data.title,
+    image: entry.data.seo?.image,
   }))
   .toSorted((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)));
 ---
@@ -36,13 +37,20 @@ const posts = (await getCollection("docs"))
   <h1>News</h1>
   <p>数理・情報科学課程の活動・受賞・イベントのお知らせです。</p>
 
-  <ul class="news-list">
+  <ul class="news-grid">
     {
       posts.map((post) => (
         <li>
-          <time datetime={String(post.date)}>{post.date}</time>
-          <a href={post.href}>{post.title}</a>
-          <p>{post.description}</p>
+          <a class="news-card" href={post.href}>
+            {post.image && (
+              <img class="news-card-image" src={post.image} alt="" loading="lazy" />
+            )}
+            <div class="news-card-body">
+              <time datetime={String(post.date)}>{post.date}</time>
+              <h3>{post.title}</h3>
+              <p>{post.description}</p>
+            </div>
+          </a>
         </li>
       ))
     }
@@ -50,32 +58,63 @@ const posts = (await getCollection("docs"))
 </RootLayout>
 
 <style>
-  .news-list {
+  .news-grid {
     list-style: none;
+    display: grid;
+    /* Source cover images are only ~512px wide; a wide 1fr track upscales
+       them enough to look blurry. Capping the track width keeps thumbnails
+       close to their native resolution. */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+    gap: 1.25rem;
     margin: 2rem 0 0;
     padding: 0;
-    border-top: 1px solid var(--blume-border);
   }
-  .news-list li {
-    padding: 1.1rem 0;
-    border-bottom: 1px solid var(--blume-border);
+  .news-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--blume-border);
+    border-radius: var(--blume-radius, 0.5rem);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition: border-color 0.15s ease;
   }
-  .news-list time {
+  .news-card:hover {
+    border-color: var(--blume-accent);
+  }
+  .news-card-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    background: var(--blume-muted, #f2f0ed);
+  }
+  .news-card-body {
+    padding: 0.9rem 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .news-card time {
     display: block;
     font-size: 0.8rem;
     color: var(--blume-muted-foreground, #6b6660);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
   }
-  .news-list a {
+  .news-card h3 {
+    font-size: 1rem;
     font-weight: 600;
-    text-decoration: none;
+    margin: 0 0 0.4rem;
+    line-height: 1.4;
   }
-  .news-list a:hover {
+  .news-card:hover h3 {
     color: var(--blume-accent);
   }
-  .news-list p {
-    margin: 0.35rem 0 0;
-    font-size: 0.9rem;
+  .news-card p {
+    margin: 0;
+    font-size: 0.85rem;
     color: var(--blume-muted-foreground, #6b6660);
+    flex: 1;
   }
 </style>

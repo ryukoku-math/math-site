@@ -1,0 +1,78 @@
+---
+// Wraps Blume's built-in Header to add a full-bleed cover photo right below
+// it — outside `[data-blume-doc-grid]` entirely (the header renders directly
+// in <body>, before the grid opens), so it spans the true viewport width
+// exactly like the homepage's own banner, with no risk of overlapping the
+// grid's right-rail nav/TOC column the way a banner nested inside the
+// content column would.
+import Header from "blume/components/layout/Header.astro";
+import fs from "node:fs";
+import path from "node:path";
+
+const props = Astro.props;
+const route = props.route as string;
+
+const MAIN_PAGE_COVERS: Record<string, string> = {
+  "/about": "/images/covers/about.jpg",
+  "/faculty": "/images/covers/faculty.jpg",
+  "/research": "/images/covers/research.jpg",
+  "/admission": "/images/covers/admission.jpg",
+  "/videos": "/images/covers/videos.jpg",
+};
+
+// News cover images keep whatever extension the source Notion asset used
+// (jpg/png/webp) — resolved from disk rather than hardcoded per slug.
+function newsCoverFor(newsRoute: string): string | null {
+  const match = newsRoute.match(/^\/news\/([^/]+)$/);
+  if (!match) return null;
+  const slug = match[1];
+  const dir = path.join(process.cwd(), "public", "images", "news", slug);
+  if (!fs.existsSync(dir)) return null;
+  const file = fs.readdirSync(dir).find((f) => f.startsWith("cover."));
+  return file ? `/images/news/${slug}/${file}` : null;
+}
+
+const image = MAIN_PAGE_COVERS[route] ?? newsCoverFor(route);
+---
+
+<Header {...props} />
+{
+  image && (
+    <div class="page-banner">
+      <img src={image} alt="" loading="eager" />
+    </div>
+  )
+}
+
+<style>
+  /*
+   * Source covers (public/images/news/**\/cover.*) are only ~512px wide —
+   * stretching them across the full viewport (often 1200px+) upscaled them
+   * 2-3x and made them look visibly blurry. Capping the banner's width keeps
+   * the upscale mild enough to stay crisp on ordinary displays.
+   */
+  .page-banner {
+    width: 100%;
+    max-width: 1024px;
+    margin-inline: auto;
+    height: 220px;
+    overflow: hidden;
+  }
+  @media (min-width: 640px) {
+    .page-banner {
+      height: 280px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .page-banner {
+      height: 320px;
+    }
+  }
+  .page-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 65%;
+    display: block;
+  }
+</style>
