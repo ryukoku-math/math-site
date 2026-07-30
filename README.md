@@ -1,34 +1,31 @@
 # math-site
 
-[日本語版はこちら](README.ja.md)
+龍谷大学 先端理工学部 数理・情報科学課程の公式サイト
+**[www.math.ryukoku.ac.jp](https://www.math.ryukoku.ac.jp)** のソースリポジトリです。
 
-The source for **[www.math.ryukoku.ac.jp](https://www.math.ryukoku.ac.jp)**, the public site of the
-Applied Mathematics and Informatics Course, Faculty of Advanced Science and Technology, Ryukoku
-University.
+Markdownベースのドキュメントフレームワーク [Blume](https://useblume.dev)（Astro/Vite製）で構築されて
+います。このリポジトリにはコンテンツ・設定・少数の手書きAstroページ/コンポーネントのみが含まれ、
+フレームワーク自体のコードは含まれません。
 
-Built with [Blume](https://useblume.dev), a Markdown-first docs framework on Astro/Vite. This
-repository holds only content, configuration, and a couple of hand-built Astro pages/components —
-there is no framework code to maintain here.
+## コンテンツの編集
 
-## Editing content
+ほとんどの編集は `docs/` 以下の `.mdx` ファイルを変更するだけで完結します。ローカルに開発環境がない
+場合は、**[CONTRIBUTING.md](CONTRIBUTING.md)** にGitHubのWeb画面だけで編集する手順（ブランチ作成
+→編集→Pull Request）をまとめています。
 
-Most edits are just changing a `.mdx` file under `docs/`. If you don't have a local dev setup, see
-**[CONTRIBUTING.md](CONTRIBUTING.md)** for a step-by-step guide to editing directly from the GitHub
-web UI (branch → edit → pull request).
-
-## Local development
+## ローカル開発
 
 ```bash
-npm install      # install dependencies
-npm run dev      # dev server with hot reload (http://localhost:4321)
-npm run build    # build static output to dist/
-npm run doctor   # diagnose config/content problems
+npm install      # 依存関係をインストール
+npm run dev      # 開発サーバー起動（ホットリロード付き、http://localhost:4321）
+npm run build    # dist/ に静的出力をビルド
+npm run doctor   # 設定・コンテンツの問題を診断
 ```
 
-There is no lint or test suite — this is a content-only project. Verify changes by running `npm run
-dev` and checking the rendered page.
+Lintやテストスイートはありません（コンテンツのみのプロジェクトのため）。変更内容は `npm run dev` で
+実際のページを確認して検証してください。
 
-## License
+## ライセンス
 
-Content and code in this repository are © Ryukoku University, Applied Mathematics and Informatics
-Course. Not for reuse without permission.
+このリポジトリのコンテンツおよびコードは 龍谷大学 先端理工学部 数理・情報科学課程 に帰属します。
+無断転載・再利用はご遠慮ください。
