@@ -43,13 +43,19 @@ export async function onRequest(context) {
     });
     clearTimeout(timeout);
 
-    if (originResponse.status >= 500) {
+    // 404も5xxと同様にフォールバック対象にする — whale2への本番反映は毎日午前3時の
+    // 自動デプロイ待ちのため、Cloudflare側では最新ビルドに存在するページでも、
+    // whale2にまだ反映されていない新しいルートは素の404を返してくる。本当に
+    // 存在しないページなら、フォールバック先の静的ビルドでもどのみち404になるだけで
+    // 悪化はしない。401/403/400などそれ以外の4xxは正しいアプリケーション応答なので
+    // ここでは対象にしない。
+    if (originResponse.status >= 500 || originResponse.status === 404) {
       throw new Error(`origin returned ${originResponse.status}`);
     }
     return originResponse;
   } catch (err) {
     clearTimeout(timeout);
-    // whale2に到達不能 → Pagesの静的コンテンツへフォールバック
+    // whale2に到達不能、または該当ルートが未反映 → Pagesの静的コンテンツへフォールバック
     return next();
   }
 }
