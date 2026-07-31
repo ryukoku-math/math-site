@@ -9,6 +9,18 @@ export async function onRequest(context) {
   const { request, next } = context;
   const url = new URL(request.url);
 
+  // News EditorのGitHub認証・PR作成処理(/api/github/*)だけはCloudflare Pages
+  // Functions側で完結させる必要がある — GitHub OAuthのシークレットはCloudflare
+  // Pagesの環境変数としてのみ存在し、whale2の.envには無い。
+  // 一方 /admin/* 以下のページ自体(pages/admin/news/*.astro)は動的レンダリング
+  // (prerender: false)の通常のAstroページで、他の全ページと同じくwhale2の
+  // Node SSRサーバーが普通にレンダリングできる — Cloudflareの静的フォールバック
+  // ビルドにはSSR用のNodeランタイムが無いため、ここを誤ってプロキシから除外すると
+  // 動的な/admin/news/<slug>が404になる。
+  if (url.pathname.startsWith("/api/github/")) {
+    return next();
+  }
+
   const originUrl = ORIGIN + url.pathname + url.search;
 
   const controller = new AbortController();

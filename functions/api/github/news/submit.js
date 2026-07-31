@@ -1,0 +1,239 @@
+import { getSessionFromRequest } from "../../../lib/cookie.js";
+import {
+  GitHubApiError,
+  createBlob,
+  createCommit,
+  createPullRequest,
+  createRef,
+  createTree,
+  findOpenPullRequest,
+  getBranchTip,
+  getCommit,
+  getFileContent,
+  toApiErrorResponse,
+  updateRef,
+} from "../../../lib/github-client.js";
+import { renderArticle } from "../../../lib/mdx-template.js";
+import { generateSlug } from "../../../lib/slug.js";
+
+// フォームからの画像添付が際限なく大きくならないよう、送信全体の合計サイズに緩い上限を設ける。
+const MAX_TOTAL_BYTES = 20 * 1024 * 1024;
+
+export async function onRequestPost({ request, env }) {
+  const session = await getSessionFromRequest(request, env);
+  if (!session) return Response.json({ error: "not_authenticated" }, { status: 401 });
+
+  let form;
+  try {
+    form = await request.formData();
+  } catch {
+    return Response.json({ error: "invalid_form_data" }, { status: 400 });
+  }
+
+  const mode = form.get("mode");
+  if (mode !== "create" && mode !== "edit") {
+    return Response.json({ error: "invalid_mode" }, { status: 400 });
+  }
+
+  const title = String(form.get("title") ?? "").trim();
+  const date = String(form.get("date") ?? "").trim();
+  const description = String(form.get("description") ?? "").trim();
+  const body = String(form.get("body") ?? "").trim();
+
+  if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !description || !body) {
+    return Response.json({ error: "missing_fields" }, { status: 400 });
+  }
+
+  let coverPlan;
+  let imagePlan;
+  try {
+    coverPlan = JSON.parse(String(form.get("coverPlan") ?? "null"));
+    imagePlan = JSON.parse(String(form.get("imagePlan") ?? "[]"));
+  } catch {
+    return Response.json({ error: "invalid_image_plan" }, { status: 400 });
+  }
+
+  const coverIsValid =
+    coverPlan &&
+    ((coverPlan.source === "new" && form.get(coverPlan.fileKey) instanceof File) ||
+      (coverPlan.source === "existing" && typeof coverPlan.path === "string" && coverPlan.path));
+  if (!coverIsValid) {
+    return Response.json({ error: "cover_image_required" }, { status: 400 });
+  }
+
+  let totalBytes = 0;
+  for (const [, value] of form.entries()) {
+    if (value instanceof File) totalBytes += value.size;
+  }
+  if (totalBytes > MAX_TOTAL_BYTES) {
+    return Response.json({ error: "images_too_large" }, { status: 400 });
+  }
+
+  const owner = env.GITHUB_REPO_OWNER;
+  const repo = env.GITHUB_REPO_NAME;
+  const baseBranch = env.GITHUB_REPO_BRANCH;
+  const token = session.token;
+
+  let slug = String(form.get("slug") ?? "");
+  if (mode === "create") {
+    slug = generateSlug(date);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      let existing;
+      try {
+        existing = await getFileContent(token, owner, repo, `docs/news/${slug}.mdx`);
+      } catch (err) {
+        return toApiErrorResponse(err);
+      }
+      if (!existing) break;
+      slug = generateSlug(date);
+    }
+  } else if (!slug || !/^[a-z0-9-]+$/i.test(slug)) {
+    return Response.json({ error: "invalid_slug" }, { status: 400 });
+  }
+
+  try {
+    const baseSha = await getBranchTip(token, owner, repo, baseBranch);
+    if (!baseSha) throw new GitHubApiError(404, { message: `base branch ${baseBranch} not found` });
+    const baseCommit = await getCommit(token, owner, repo, baseSha);
+
+    const treeEntries = [];
+
+    // カバー画像: 新規アップロードならblobを作りtreeに追加、既存を維持するなら
+    // base_treeにすでに存在するのでtreeエントリ自体が不要。
+    let coverSitePath;
+    if (coverPlan.source === "new") {
+      const file = form.get(coverPlan.fileKey);
+      const ext = extensionOf(file.name);
+      const repoPath = `public/images/news/${slug}/cover.${ext}`;
+      const blobSha = await createBlob(token, owner, repo, await fileToBase64(file), "base64");
+      treeEntries.push({ path: repoPath, mode: "100644", type: "blob", sha: blobSha });
+      coverSitePath = toSitePath(repoPath);
+    } else {
+      coverSitePath = coverPlan.path;
+    }
+
+    // 追加画像。既存を維持するものはtreeエントリなし(base_treeから引き継がれる)。
+    const renderedImages = [];
+    let counter = 1;
+    for (const item of imagePlan) {
+      if (item.source === "new") {
+        const file = form.get(item.fileKey);
+        if (!(file instanceof File)) continue;
+        const ext = extensionOf(file.name);
+        const num = String(counter).padStart(2, "0");
+        const repoPath = `public/images/news/${slug}/${num}.${ext}`;
+        const blobSha = await createBlob(token, owner, repo, await fileToBase64(file), "base64");
+        treeEntries.push({ path: repoPath, mode: "100644", type: "blob", sha: blobSha });
+        renderedImages.push({ alt: item.alt ?? "", path: toSitePath(repoPath) });
+      } else if (item.source === "existing" && item.path) {
+        renderedImages.push({ alt: item.alt ?? "", path: item.path });
+      }
+      counter += 1;
+    }
+
+    const mdxContent = renderArticle({
+      title,
+      date,
+      description,
+      imagePath: coverSitePath,
+      body,
+      images: renderedImages,
+    });
+
+    const mdxBlobSha = await createBlob(token, owner, repo, mdxContent, "utf-8");
+    treeEntries.push({ path: `docs/news/${slug}.mdx`, mode: "100644", type: "blob", sha: mdxBlobSha });
+
+    const treeSha = await createTree(token, owner, repo, baseCommit.tree.sha, treeEntries);
+    const commitMessage = mode === "create" ? `news: add ${title}` : `news: update ${title}`;
+    const commitSha = await createCommit(token, owner, repo, commitMessage, treeSha, baseSha);
+    const prBody = `News Editor経由で @${session.login} により${mode === "create" ? "作成" : "更新"}されました。`;
+
+    const result = await openOrUpdatePullRequest({
+      token,
+      owner,
+      repo,
+      baseBranch,
+      mode,
+      slug,
+      title,
+      commitSha,
+      prBody,
+    });
+
+    return Response.json({ prUrl: result.url, prNumber: result.number, slug });
+  } catch (err) {
+    return toApiErrorResponse(err);
+  }
+}
+
+async function openOrUpdatePullRequest({ token, owner, repo, baseBranch, mode, slug, title, commitSha, prBody }) {
+  if (mode === "create") {
+    const branchName = `news/${slug}`;
+    const refRes = await createRef(token, owner, repo, branchName, commitSha);
+    if (!refRes.ok) throw new GitHubApiError(refRes.status, refRes.body);
+    return createPullRequest(token, owner, repo, {
+      title: `News: ${title}`,
+      head: branchName,
+      base: baseBranch,
+      body: prBody,
+    });
+  }
+
+  // edit: 同じ記事を2回編集したときに同じPRを更新できるよう、決まったブランチ名を使う。
+  const branchName = `edit-news-${slug}`;
+  const existingTip = await getBranchTip(token, owner, repo, branchName);
+
+  if (!existingTip) {
+    const refRes = await createRef(token, owner, repo, branchName, commitSha);
+    if (!refRes.ok) throw new GitHubApiError(refRes.status, refRes.body);
+    return createPullRequest(token, owner, repo, {
+      title: `News: ${title} (update)`,
+      head: branchName,
+      base: baseBranch,
+      body: prBody,
+    });
+  }
+
+  const openPr = await findOpenPullRequest(token, owner, repo, branchName);
+  if (openPr) {
+    const updateRes = await updateRef(token, owner, repo, branchName, commitSha);
+    if (!updateRes.ok) throw new GitHubApiError(updateRes.status, updateRes.body);
+    return { url: openPr.html_url, number: openPr.number };
+  }
+
+  // ブランチは残っているがPRがマージ/クローズ済み — その履歴を上書きせず、
+  // 連番サフィックスを振った新しいブランチ・PRにする。
+  let suffix = 2;
+  let candidate = `${branchName}-${suffix}`;
+  while (await getBranchTip(token, owner, repo, candidate)) {
+    suffix += 1;
+    candidate = `${branchName}-${suffix}`;
+  }
+  const refRes = await createRef(token, owner, repo, candidate, commitSha);
+  if (!refRes.ok) throw new GitHubApiError(refRes.status, refRes.body);
+  return createPullRequest(token, owner, repo, {
+    title: `News: ${title} (update)`,
+    head: candidate,
+    base: baseBranch,
+    body: prBody,
+  });
+}
+
+function extensionOf(filename) {
+  const match = /\.([a-zA-Z0-9]+)$/.exec(filename ?? "");
+  return (match ? match[1] : "jpg").toLowerCase();
+}
+
+function toSitePath(repoPath) {
+  return `/${repoPath.replace(/^public\//, "")}`;
+}
+
+async function fileToBase64(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
