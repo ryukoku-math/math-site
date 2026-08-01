@@ -46,15 +46,17 @@ export async function verifySession(cookieValue, secret) {
   if (!payloadB64 || !sigB64) return null;
 
   const key = await importHmacKey(secret);
-  const valid = await crypto.subtle.verify(
-    "HMAC",
-    key,
-    fromBase64Url(sigB64),
-    encoder.encode(payloadB64),
-  );
-  if (!valid) return null;
-
   try {
+    // base64として不正な値だと fromBase64Url(atob) が例外を投げる。捕まえずに
+    // 抜けると壊れたcookie一つでFunctionが500になり、UI側は「未ログインなので
+    // ログインし直してください」ではなく汎用エラーになってしまう。
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      fromBase64Url(sigB64),
+      encoder.encode(payloadB64),
+    );
+    if (!valid) return null;
     return JSON.parse(decoder.decode(fromBase64Url(payloadB64)));
   } catch {
     return null;

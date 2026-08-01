@@ -35,10 +35,14 @@ export async function onRequestPost({ request, env }) {
     return Response.json({ error: "invalid_mode" }, { status: 400 });
   }
 
-  const title = String(form.get("title") ?? "").trim();
-  const date = String(form.get("date") ?? "").trim();
-  const description = String(form.get("description") ?? "").trim();
-  const body = String(form.get("body") ?? "").trim();
+  // multipart/form-data はテキストフィールドの改行をCRLFに正規化して送ってくる。
+  // そのまま書き込むとリポジトリ内の他のMDX(すべてLF)と改行コードが混ざるので、
+  // ここでLFに戻す。
+  const textField = (name) => String(form.get(name) ?? "").replace(/\r\n/g, "\n").trim();
+  const title = textField("title");
+  const date = textField("date");
+  const description = textField("description");
+  const body = textField("body");
 
   if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !description || !body) {
     return Response.json({ error: "missing_fields" }, { status: 400 });

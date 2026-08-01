@@ -47,14 +47,19 @@ export function renderBody({ body, images }) {
 }
 
 export function renderArticle(fields) {
-  return `${renderFrontmatterBlock(fields)}\n\n${renderBody(fields)}`;
+  // 閉じ "---" の直後に空行を入れない — 既存の docs/news/*.mdx と同じ形。
+  // ここに空行があると extractFrontmatterFields が返す本文が改行始まりになり、
+  // parseBody がこのツール自身の出力を読み戻せなくなる。
+  return `${renderFrontmatterBlock(fields)}\n${renderBody(fields)}`;
 }
 
 // 本文(フロントマターを除いた部分)を解析し、プロース本文と追加画像に分解する。
 // テンプレートと完全に一致しない場合は matched:false を返す(曖昧一致はしない —
 // 誤って画像参照を取りこぼすより、フォールバック編集に倒すほうが安全)。
 export function parseBody(raw) {
-  const trimmed = raw.replace(/\s+$/, "");
+  // 改行コードを正規化した上で、前後の空行は許容する(frontmatterの直後に
+  // 空行がある書き方も、手編集の結果として普通にありうる)。
+  const trimmed = raw.replace(/\r\n/g, "\n").replace(/^\n+/, "").replace(/\s+$/, "");
   if (!trimmed.startsWith(`${TITLE_CLAMP_LINE}\n`)) {
     return { matched: false };
   }
