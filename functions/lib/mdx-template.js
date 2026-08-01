@@ -68,8 +68,18 @@ export function parseBody(raw) {
   if (columnsMatch) {
     const inner = columnsMatch[1];
     const items = [...inner.matchAll(COLUMN_ITEM_RE)];
-    const rebuilt = items.map((m) => `<Column>\n    ![${m[1]}](${m[2]})\n  </Column>`).join("\n");
-    if (items.length === 0 || rebuilt !== inner.trim()) {
+    // マッチした<Column>ブロックを取り除いた残りが空白だけであれば、この
+    // ブロックには画像以外の中身が無い = テンプレートが生成した形だと判断できる。
+    // 整形した文字列との単純比較にすると、ブロック間の改行・インデントの差だけで
+    // 不一致になってしまう(画像2枚以上は必ずフォールバックしていた)。
+    let residue = "";
+    let cursor = 0;
+    for (const m of items) {
+      residue += inner.slice(cursor, m.index);
+      cursor = m.index + m[0].length;
+    }
+    residue += inner.slice(cursor);
+    if (items.length === 0 || residue.trim() !== "") {
       return { matched: false };
     }
     images = items.map((m) => ({ alt: m[1], path: m[2] }));

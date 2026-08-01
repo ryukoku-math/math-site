@@ -121,23 +121,39 @@ export async function onRequestPost({ request, env }) {
       coverSitePath = coverPlan.path;
     }
 
+    // そのまま維持する既存画像が使っている番号を先に押さえておく。これをしないと、
+    // 画像を1枚消して1枚足したときなどに新規画像が既存画像と同じ番号に採番され、
+    // 維持したはずの画像を上書きした上で同じパスを2箇所から参照してしまう。
+    // 表示順は下の renderedImages の順序で決まるので、ファイル名の番号が
+    // 飛んでいても記事の見た目には影響しない。
+    const takenNumbers = new Set(
+      imagePlan
+        .filter((item) => item.source === "existing" && typeof item.path === "string")
+        .map((item) => imageNumberOf(item.path, slug))
+        .filter((num) => num !== null),
+    );
+    let nextNumber = 1;
+    const allocateNumber = () => {
+      while (takenNumbers.has(String(nextNumber).padStart(2, "0"))) nextNumber += 1;
+      const num = String(nextNumber).padStart(2, "0");
+      nextNumber += 1;
+      return num;
+    };
+
     // 追加画像。既存を維持するものはtreeエントリなし(base_treeから引き継がれる)。
     const renderedImages = [];
-    let counter = 1;
     for (const item of imagePlan) {
       if (item.source === "new") {
         const file = form.get(item.fileKey);
         if (!(file instanceof File)) continue;
         const ext = extensionOf(file.name);
-        const num = String(counter).padStart(2, "0");
-        const repoPath = `public/images/news/${slug}/${num}.${ext}`;
+        const repoPath = `public/images/news/${slug}/${allocateNumber()}.${ext}`;
         const blobSha = await createBlob(token, owner, repo, await fileToBase64(file), "base64");
         treeEntries.push({ path: repoPath, mode: "100644", type: "blob", sha: blobSha });
         renderedImages.push({ alt: item.alt ?? "", path: toSitePath(repoPath) });
       } else if (item.source === "existing" && item.path) {
         renderedImages.push({ alt: item.alt ?? "", path: item.path });
       }
-      counter += 1;
     }
 
     const mdxContent = renderArticle({
@@ -231,6 +247,14 @@ async function openOrUpdatePullRequest({ token, owner, repo, baseBranch, mode, s
 function extensionOf(filename) {
   const match = /\.([a-zA-Z0-9]+)$/.exec(filename ?? "");
   return (match ? match[1] : "jpg").toLowerCase();
+}
+
+// この記事自身の画像ディレクトリにある連番画像("/images/news/<slug>/03.jpg" など)
+// なら、その番号("03")を返す。それ以外(他記事の画像や外部URL)は新規画像の
+// 採番と衝突しようがないので null を返す。
+function imageNumberOf(sitePath, slug) {
+  const match = new RegExp(`^/images/news/${slug}/(\\d{2})\\.[a-zA-Z0-9]+$`).exec(sitePath);
+  return match ? match[1] : null;
 }
 
 function toSitePath(repoPath) {
