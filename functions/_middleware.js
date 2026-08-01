@@ -1,4 +1,7 @@
 const ORIGIN = "https://whale2.math.ryukoku.ac.jp/origin-math";
+// Cloudflare Pagesの本番ブランチ。これ以外のブランチのデプロイ(=PRプレビュー)は
+// whale2にプロキシせず、そのデプロイ自身のビルドを配信する。
+const PRODUCTION_BRANCH = "main";
 const TIMEOUT_MS = 3000;
 // Ask AI streams an LLM completion — a few seconds of generation time is
 // normal, not a sign the origin is down, so it needs a much longer allowance
@@ -6,17 +9,24 @@ const TIMEOUT_MS = 3000;
 const ASK_TIMEOUT_MS = 30000;
 
 export async function onRequest(context) {
-  const { request, next } = context;
+  const { request, next, env } = context;
   const url = new URL(request.url);
 
   // News EditorのGitHub認証・PR作成処理(/api/github/*)だけはCloudflare Pages
   // Functions側で完結させる必要がある — GitHub OAuthのシークレットはCloudflare
   // Pagesの環境変数としてのみ存在し、whale2の.envには無い。
-  // 逆に /admin/* 配下のページ自体は除外してはいけない。このPagesプロジェクトは
-  // ビルドを実行せず pages-fallback/ の1枚だけを配信するため、next()にはページの
-  // 実体が無く、除外すると「一時的にご利用いただけません」が返るだけになる。
-  // /admin/* も他の全ページと同様、whale2のNode SSRサーバーが配信する。
+  // 逆に /admin/* 配下のページ自体は除外してはいけない(本番では実体が
+  // whale2のNode SSRサーバーにしかない)。
   if (url.pathname.startsWith("/api/github/")) {
+    return next();
+  }
+
+  // PRプレビュー(本番ブランチ以外のデプロイ)は、そのブランチのビルドをそのまま
+  // 配信する。ここでプロキシしてしまうとwhale2 = mainの内容が返り、
+  // 「プレビューを開いても変更が反映されていない」ことになる(実際そうなっていた)。
+  // プレビューはCloudflare上の静的ビルドなので、SSRが必要なもの(Ask AIの
+  // /api/ask、編集画面の /admin/news/<slug>)はプレビューでは動かない。
+  if (env.CF_PAGES_BRANCH && env.CF_PAGES_BRANCH !== PRODUCTION_BRANCH) {
     return next();
   }
 

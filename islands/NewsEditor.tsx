@@ -189,8 +189,14 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
           {prUrl}
         </a>
         <p>
-          Cloudflare Pagesのプレビューが用意され、管理者(mathRyukoku / sanoakr)の承認後に <code>main</code> へ反映されます。
-          本番サイトへの反映は毎日午前3時(日本時間)の自動デプロイ時です。
+          管理者(mathRyukoku / sanoakr)の承認後に <code>main</code> へ反映され、公開サイトには
+          毎日午前3時(日本時間)の自動デプロイで反映されます。
+        </p>
+        <p>
+          内容の確認はPRの「Files changed」で行ってください。PRに表示されるCloudflare Pagesの
+          プレビューURLは、このサイトの構成上<strong>変更内容が反映されません</strong>
+          (すべてのページが本番サーバーから配信されるため、プレビューURLでも現在の{" "}
+          <code>main</code> の内容が表示されます)。
         </p>
       </div>
     );
