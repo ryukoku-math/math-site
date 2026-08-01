@@ -40,5 +40,11 @@ export async function onRequestGet({ request, env }) {
 
   // このエディタが生成したテンプレートと一致しない(手編集など)場合は、
   // 本文全体を生Markdownとして返す — 画像は個別に管理せず本文の一部として扱う。
-  return Response.json({ ...base, body: rawBody.trim(), images: [], templateMatch: false });
+  // ただし先頭の <TitleClamp /> は取り除いておく。保存時に renderBody が必ず
+  // 先頭へ付け直すため、残したままだと2行に増えてしまう。
+  let fallbackBody = rawBody.replace(/\r\n/g, "\n").replace(/^\n+/, "").trimEnd();
+  if (fallbackBody.startsWith("<TitleClamp />\n")) {
+    fallbackBody = fallbackBody.slice("<TitleClamp />\n".length).replace(/^\n+/, "");
+  }
+  return Response.json({ ...base, body: fallbackBody, images: [], templateMatch: false });
 }

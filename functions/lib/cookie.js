@@ -71,7 +71,14 @@ export function parseCookies(cookieHeader) {
     if (idx === -1) continue;
     const key = part.slice(0, idx).trim();
     const value = part.slice(idx + 1).trim();
-    if (key) out[key] = decodeURIComponent(value);
+    if (!key) continue;
+    try {
+      out[key] = decodeURIComponent(value);
+    } catch {
+      // "%GG" のような不正なパーセントエンコードでdecodeURIComponentが投げる。
+      // ここで捕まえないとFunctionが500になる(セッション値なら結局署名検証で弾かれる)。
+      out[key] = value;
+    }
   }
   return out;
 }

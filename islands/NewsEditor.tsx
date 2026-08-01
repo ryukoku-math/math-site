@@ -188,21 +188,39 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
     setImages((prev) => prev.map((img, i) => (i === index ? { ...img, ...patch } : img)));
   }
 
+  // プレビュー用のオブジェクトURLは差し替え・削除のたびに解放する。放置すると
+  // 画像を何度も選び直す編集セッションでBlobがメモリに溜まり続ける。
+  function releasePreview(url?: string) {
+    if (url) URL.revokeObjectURL(url);
+  }
+
   function removeImage(index: number) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImages((prev) => {
+      releasePreview(prev[index]?.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     setNewCoverFile(file);
-    setNewCoverPreview(file ? URL.createObjectURL(file) : null);
+    setNewCoverPreview((prev) => {
+      releasePreview(prev ?? undefined);
+      return file ? URL.createObjectURL(file) : null;
+    });
   }
 
   function handleImageFileChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     // 既存画像のスロットで選び直した場合も、新しいファイルへの差し替えとして扱う。
-    updateImage(index, { file, previewUrl: URL.createObjectURL(file), source: "new", path: undefined });
+    setImages((prev) =>
+      prev.map((img, i) => {
+        if (i !== index) return img;
+        releasePreview(img.previewUrl);
+        return { ...img, file, previewUrl: URL.createObjectURL(file), source: "new", path: undefined };
+      }),
+    );
   }
 
   async function handleSubmit(event: React.FormEvent) {
