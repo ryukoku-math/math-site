@@ -106,7 +106,11 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const baseSha = await getBranchTip(token, owner, repo, baseBranch);
-    if (!baseSha) throw new GitHubApiError(404, { message: `base branch ${baseBranch} not found` });
+    // 404としてthrowするとtoApiErrorResponseが「権限がありません」に変換してしまい、
+    // 実際の原因(GITHUB_REPO_BRANCHの設定ミス)を追えなくなるので専用の応答にする。
+    if (!baseSha) {
+      return Response.json({ error: "base_branch_not_found", branch: baseBranch }, { status: 500 });
+    }
     const baseCommit = await getCommit(token, owner, repo, baseSha);
 
     const treeEntries = [];

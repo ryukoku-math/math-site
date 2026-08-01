@@ -74,11 +74,43 @@ export async function getFileContent(token, owner, repo, path) {
   return { sha: body.sha, content: decodeBase64Utf8(body.content) };
 }
 
-export async function listDirectory(token, owner, repo, path) {
-  const { status, body } = await ghFetch(token, `/repos/${owner}/${repo}/contents/${path}`);
-  if (status === 404) return [];
-  if (status !== 200) throw new GitHubApiError(status, body);
-  return Array.isArray(body) ? body : [];
+// ディレクトリ内の全ファイルを本文込みで1リクエストで取得する。
+// Contents APIで一覧+ファイル個別取得をすると記事数+1リクエストになり、
+// Cloudflare Workersの1呼び出しあたりのサブリクエスト上限(無料プランは50)を
+// 超えた分が静かに失敗する — 実際に本番で89記事のうち40件がタイトル・日付を
+// 取得できていなかった(成功49 + 一覧1 = ちょうど50)。GraphQLなら1リクエストで済む。
+export async function fetchDirectoryWithContents(token, owner, repo, branch, path) {
+  const query = `query($owner:String!,$name:String!,$expr:String!){
+    repository(owner:$owner,name:$name){
+      object(expression:$expr){
+        ... on Tree { entries { name type object { ... on Blob { text } } } }
+      }
+    }
+  }`;
+
+  const res = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "User-Agent": "math-site-news-editor",
+    },
+    body: JSON.stringify({ query, variables: { owner, name: repo, expr: `${branch}:${path}` } }),
+  });
+
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new GitHubApiError(res.status, body);
+  // GraphQLはエラーでもHTTP 200を返すので、bodyのerrorsを見る必要がある。
+  if (body?.errors?.length) throw new GitHubApiError(502, { message: body.errors[0].message });
+
+  // 指定した <branch>:<path> が解決できないと object が null になる。空ディレクトリと
+  // 区別せず [] を返すと、GITHUB_REPO_BRANCH の設定ミスが「記事0件」に見えてしまうので
+  // null を返して呼び出し側でエラーにする。
+  const entries = body?.data?.repository?.object?.entries;
+  if (!Array.isArray(entries)) return null;
+  return entries
+    .filter((entry) => entry.type === "blob")
+    .map((entry) => ({ name: entry.name, text: entry.object?.text ?? "" }));
 }
 
 export async function getBranchTip(token, owner, repo, branch) {

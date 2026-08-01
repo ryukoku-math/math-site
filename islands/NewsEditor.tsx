@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Me = { authenticated: boolean; login?: string; avatarUrl?: string };
 
@@ -112,6 +112,15 @@ function describeError(code?: string): string {
       return "GitHub APIのレート制限に達しました。しばらく待ってから再試行してください。";
     case "not_authenticated":
       return "ログインが必要です。ページを再読み込みしてください。";
+    case "news_dir_not_found":
+    case "base_branch_not_found":
+      return "リポジトリの設定(参照先のブランチ)が正しくないようです。管理者に連絡してください。";
+    case "cover_image_required":
+      return "カバー画像を1枚選択してください。";
+    case "images_too_large":
+      return "画像の合計サイズが大きすぎます。枚数を減らすか、画像を圧縮してください。";
+    case "slug_collision":
+      return "記事IDの生成に失敗しました。もう一度送信してください。";
     default:
       return "エラーが発生しました。しばらく待ってから再試行してください。";
   }
@@ -136,6 +145,13 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [prUrl, setPrUrl] = useState<string | null>(null);
+
+  // 生成済みのプレビューURLを把握しておき、アンマウント時に取りこぼしなく解放する。
+  const livePreviews = useRef<Set<string>>(new Set());
+  useEffect(() => () => {
+    for (const url of livePreviews.current) URL.revokeObjectURL(url);
+    livePreviews.current.clear();
+  }, []);
 
   useEffect(() => {
     if (mode !== "edit" || !slug) return;
@@ -188,21 +204,49 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
     setImages((prev) => prev.map((img, i) => (i === index ? { ...img, ...patch } : img)));
   }
 
+  // プレビュー用のオブジェクトURLは、差し替え・削除・送信完了・アンマウントの
+  // いずれでも確実に解放する。放置するとBlobがメモリに残り続ける。
+  // createObjectURL/revokeObjectURL は必ずsetState更新関数の「外」で呼ぶ —
+  // 更新関数は純粋でなければならず、Reactが二重に呼んだ場合にURLを2つ作って
+  // 片方を取りこぼす(解放漏れを直すつもりで漏らす)ことになる。
+  function createPreview(file: File) {
+    const url = URL.createObjectURL(file);
+    livePreviews.current.add(url);
+    return url;
+  }
+
+  function releasePreview(url?: string | null) {
+    if (!url) return;
+    URL.revokeObjectURL(url);
+    livePreviews.current.delete(url);
+  }
+
+  function releaseAllPreviews() {
+    for (const url of livePreviews.current) URL.revokeObjectURL(url);
+    livePreviews.current.clear();
+  }
+
   function removeImage(index: number) {
+    releasePreview(images[index]?.previewUrl);
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
+    releasePreview(newCoverPreview);
     setNewCoverFile(file);
-    setNewCoverPreview(file ? URL.createObjectURL(file) : null);
+    setNewCoverPreview(file ? createPreview(file) : null);
   }
 
   function handleImageFileChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    releasePreview(images[index]?.previewUrl);
+    const previewUrl = createPreview(file);
     // 既存画像のスロットで選び直した場合も、新しいファイルへの差し替えとして扱う。
-    updateImage(index, { file, previewUrl: URL.createObjectURL(file), source: "new", path: undefined });
+    setImages((prev) =>
+      prev.map((img, i) => (i === index ? { ...img, file, previewUrl, source: "new", path: undefined } : img)),
+    );
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -255,6 +299,8 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
       });
       const data = await res.json().catch(() => null);
       if (res.ok) {
+        // 成功画面に切り替わるとフォームは消えるので、プレビューURLはここで解放する。
+        releaseAllPreviews();
         setPrUrl(data.prUrl);
       } else {
         setSubmitError(describeError(data?.error));
