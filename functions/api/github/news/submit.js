@@ -14,6 +14,7 @@ import {
   updateRef,
 } from "../../../lib/github-client.js";
 import { renderArticle } from "../../../lib/mdx-template.js";
+import { createBranchName, editBranchName, isBranchForSlug } from "../../../lib/news-branch.js";
 import { generateSlug } from "../../../lib/slug.js";
 
 // フォームからの画像添付が際限なく大きくならないよう、送信全体の合計サイズに緩い上限を設ける。
@@ -35,8 +36,10 @@ export async function onRequestPost({ request, env }) {
     return Response.json({ error: "invalid_form_data" }, { status: 400 });
   }
 
+  // create: 新しい記事 / edit: main上の既存記事の修正 /
+  // revise: このエディタで作ったばかりのPRを、同じブランチに上書きし直す
   const mode = form.get("mode");
-  if (mode !== "create" && mode !== "edit") {
+  if (mode !== "create" && mode !== "edit" && mode !== "revise") {
     return Response.json({ error: "invalid_mode" }, { status: 400 });
   }
 
@@ -112,6 +115,16 @@ export async function onRequestPost({ request, env }) {
     }
   } else if (!slug || !/^[a-z0-9-]+$/i.test(slug)) {
     return Response.json({ error: "invalid_slug" }, { status: 400 });
+  }
+
+  // revise は上書き先のブランチをクライアントから受け取る。任意のブランチを
+  // 上書きされないよう、slugから導けるブランチ名だけを受け付ける。
+  let reviseBranch = null;
+  if (mode === "revise") {
+    reviseBranch = String(form.get("branch") ?? "");
+    if (!isBranchForSlug(reviseBranch, slug)) {
+      return Response.json({ error: "invalid_branch" }, { status: 400 });
+    }
   }
 
   try {
@@ -191,57 +204,60 @@ export async function onRequestPost({ request, env }) {
     const commitSha = await createCommit(token, owner, repo, commitMessage, treeSha, baseSha);
     const prBody = `News Editor経由で @${session.login} により${mode === "create" ? "作成" : "更新"}されました。`;
 
+    // revise は作成済みPRのブランチをそのまま上書きする。create/edit は
+    // モードごとに決まったブランチ名を使う。
+    const branchName =
+      mode === "revise" ? reviseBranch : mode === "create" ? createBranchName(slug) : editBranchName(slug);
+
     const result = await openOrUpdatePullRequest({
       token,
       owner,
       repo,
       baseBranch,
-      mode,
-      slug,
-      title,
+      branchName,
+      prTitle: mode === "create" ? `News: ${title}` : `News: ${title} (update)`,
       commitSha,
       prBody,
     });
 
-    return Response.json({ prUrl: result.url, prNumber: result.number, slug });
+    return Response.json({
+      prUrl: result.url,
+      prNumber: result.number,
+      slug,
+      // クライアントは取り消し・上書きのためにブランチ名を保持する必要がある。
+      branch: result.branch,
+    });
   } catch (err) {
     return toApiErrorResponse(err);
   }
 }
 
-async function openOrUpdatePullRequest({ token, owner, repo, baseBranch, mode, slug, title, commitSha, prBody }) {
-  if (mode === "create") {
-    const branchName = `news/${slug}`;
-    const refRes = await createRef(token, owner, repo, branchName, commitSha);
-    if (!refRes.ok) throw new GitHubApiError(refRes.status, refRes.body);
-    return createPullRequest(token, owner, repo, {
-      title: `News: ${title}`,
-      head: branchName,
+// 指定ブランチにコミットを載せ、PRを開く(または既存のオープンPRを更新する)。
+// create/edit/revise はどれもこの1つの流れに収まる — 違いは渡すブランチ名だけ。
+async function openOrUpdatePullRequest({ token, owner, repo, baseBranch, branchName, prTitle, commitSha, prBody }) {
+  const openPrOn = async (branch) => {
+    const pr = await createPullRequest(token, owner, repo, {
+      title: prTitle,
+      head: branch,
       base: baseBranch,
       body: prBody,
     });
-  }
+    return { ...pr, branch };
+  };
 
-  // edit: 同じ記事を2回編集したときに同じPRを更新できるよう、決まったブランチ名を使う。
-  const branchName = `edit-news-${slug}`;
   const existingTip = await getBranchTip(token, owner, repo, branchName);
 
   if (!existingTip) {
     const refRes = await createRef(token, owner, repo, branchName, commitSha);
     if (!refRes.ok) throw new GitHubApiError(refRes.status, refRes.body);
-    return createPullRequest(token, owner, repo, {
-      title: `News: ${title} (update)`,
-      head: branchName,
-      base: baseBranch,
-      body: prBody,
-    });
+    return openPrOn(branchName);
   }
 
   const openPr = await findOpenPullRequest(token, owner, repo, branchName);
   if (openPr) {
     const updateRes = await updateRef(token, owner, repo, branchName, commitSha);
     if (!updateRes.ok) throw new GitHubApiError(updateRes.status, updateRes.body);
-    return { url: openPr.html_url, number: openPr.number };
+    return { url: openPr.html_url, number: openPr.number, branch: branchName };
   }
 
   // ブランチは残っているがPRがマージ/クローズ済み — その履歴を上書きせず、
@@ -254,12 +270,7 @@ async function openOrUpdatePullRequest({ token, owner, repo, baseBranch, mode, s
   }
   const refRes = await createRef(token, owner, repo, candidate, commitSha);
   if (!refRes.ok) throw new GitHubApiError(refRes.status, refRes.body);
-  return createPullRequest(token, owner, repo, {
-    title: `News: ${title} (update)`,
-    head: candidate,
-    base: baseBranch,
-    body: prBody,
-  });
+  return openPrOn(candidate);
 }
 
 function extensionOf(filename) {
