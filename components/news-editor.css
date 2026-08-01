@@ -226,3 +226,51 @@
   border-radius: var(--blume-radius, 0.5rem);
   padding: 1rem 1.25rem;
 }
+.news-editor-success h3 {
+  font-size: 0.95rem;
+  margin: 1.5rem 0 0.5rem;
+}
+.news-editor-success h3:first-of-type {
+  margin-top: 1rem;
+}
+.news-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+/* 並べたときに .news-editor-button の下マージンだけ効くと不揃いになる */
+.news-editor-actions .news-editor-button {
+  margin: 0;
+}
+.news-editor-secondary-button,
+.news-editor-danger-button {
+  display: inline-block;
+  border-radius: var(--blume-radius, 0.5rem);
+  padding: 0.6rem 1.2rem;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  background: none;
+}
+.news-editor-secondary-button {
+  border: 1px solid var(--blume-border);
+  color: inherit;
+}
+.news-editor-secondary-button:hover {
+  border-color: var(--blume-accent);
+  color: var(--blume-accent);
+}
+.news-editor-danger-button {
+  border: 1px solid #b3261e;
+  color: #b3261e;
+}
+.news-editor-danger-button:hover {
+  background: #b3261e;
+  color: #fff;
+}
+.news-editor-secondary-button:disabled,
+.news-editor-danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

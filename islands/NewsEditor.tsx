@@ -17,6 +17,25 @@ type Props = {
   slug?: string;
 };
 
+type SubmittedPr = { prUrl: string; prNumber: number; slug: string; branch: string };
+
+// Cloudflare Pages のプロジェクト名。ブランチ別プレビューは
+// <ブランチ名の英数字以外を - に置換>.<プロジェクト名>.pages.dev で配信される。
+const PAGES_PROJECT = "mathryukoku";
+
+// ブランチ名からプレビューURLを組み立てる。Cloudflareはブランチ名の英数字以外を
+// "-" に置き換え、小文字化して28文字までに切り詰めたものをサブドメインにする。
+// このツールが作るブランチ名(news/<slug> = 23文字、edit-news-<slug> = 28文字)は
+// いずれも上限内なので切り詰めは起きない。
+function branchPreviewUrl(branch: string) {
+  const alias = branch
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 28);
+  return `https://${alias}.${PAGES_PROJECT}.pages.dev`;
+}
+
 async function apiGet(path: string) {
   const res = await fetch(path, { credentials: "include" });
   const data = await res.json().catch(() => null);
@@ -176,6 +195,13 @@ function describeError(data?: { error?: string; message?: string } | null): stri
       return "画像の合計サイズが大きすぎます。枚数を減らすか、画像を圧縮してください。";
     case "unsupported_image_format":
       return "対応していない画像形式です。JPEGまたはPNGに変換してからアップロードしてください。";
+    case "pr_already_merged":
+      return "このPull Requestは既にマージされているため取り消せません。記事一覧から編集してください。";
+    case "pr_not_found":
+    case "pr_branch_mismatch":
+      return "対象のPull Requestが見つかりませんでした。GitHub上で既に閉じられている可能性があります。";
+    case "invalid_branch":
+      return "対象のブランチが不正です。お手数ですが、ページを再読み込みしてやり直してください。";
     case "slug_collision":
       return "記事IDの生成に失敗しました。もう一度送信してください。";
     default:
@@ -201,9 +227,15 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [prUrl, setPrUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
+
+  // 作成/更新したPR。ここに値が入っている間は成功画面を表示する。
+  const [submitted, setSubmitted] = useState<SubmittedPr | null>(null);
+  // 「修正する」でフォームに戻ったときの上書き対象。次回送信はこのブランチを上書きする。
+  const [reviseTarget, setReviseTarget] = useState<SubmittedPr | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawn, setWithdrawn] = useState(false);
 
   // 生成済みのプレビューURLを把握しておき、アンマウント時に取りこぼしなく解放する。
   const livePreviews = useRef<Set<string>>(new Set());
@@ -240,21 +272,79 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
   if (loading) return <p className="news-editor-status">読み込み中…</p>;
   if (loadError) return <p className="news-editor-error">{loadError}</p>;
 
-  if (prUrl) {
+  if (withdrawn) {
     return (
       <div className="news-editor-success">
-        <p>Pull Requestを作成しました。</p>
-        <a href={prUrl} target="_blank" rel="noreferrer">
-          {prUrl}
-        </a>
+        <p>投稿を取り消しました。Pull Requestはクローズされ、ブランチも削除されています。</p>
+        <div className="news-editor-actions">
+          <a className="news-editor-button" href="/admin/news/new">
+            もう一度作成する
+          </a>
+          <a className="news-editor-secondary-button" href="/admin/news">
+            記事一覧に戻る
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (submitted) {
+    const previewUrl = branchPreviewUrl(submitted.branch);
+    return (
+      <div className="news-editor-success">
         <p>
-          管理者(mathRyukoku / sanoakr)の承認後に <code>main</code> へ反映され、公開サイトには
-          毎日午前3時(日本時間)の自動デプロイで反映されます。
+          Pull Requestを{mode === "create" ? "作成" : "更新"}しました。
+          <br />
+          <a href={submitted.prUrl} target="_blank" rel="noreferrer">
+            {submitted.prUrl}
+          </a>
         </p>
+
+        <h3>1. プレビューで確認する</h3>
         <p>
-          マージ前に見た目を確認できます。PRページのチェック一覧に表示される Cloudflare Pages の
-          <strong>プレビューURL</strong>を開いてください(ビルドに2〜3分かかります)。
-          そこには、この記事が追加された状態のサイトが表示されます。
+          このURLで、記事が追加された状態のサイトを確認できます。
+          <br />
+          <a href={previewUrl} target="_blank" rel="noreferrer">
+            {previewUrl}
+          </a>
+        </p>
+        <p className="news-editor-hint">
+          ビルドに2〜3分かかります。開いた直後は「Deployment Not Found」や古い内容が表示されることが
+          あるので、少し待ってから再読み込みしてください。プレビューではAI Chatと記事編集ページは
+          動作しません(記事の見た目の確認には影響しません)。
+        </p>
+
+        <h3>2. 問題があれば</h3>
+        <div className="news-editor-actions">
+          <button
+            type="button"
+            className="news-editor-secondary-button"
+            disabled={withdrawing}
+            onClick={handleRevise}
+          >
+            修正する
+          </button>
+          <button
+            type="button"
+            className="news-editor-danger-button"
+            disabled={withdrawing}
+            onClick={handleWithdraw}
+          >
+            {withdrawing ? "取り消し中…" : "この投稿を取り消す"}
+          </button>
+        </div>
+        <p className="news-editor-hint">
+          「修正する」は入力内容を保ったままフォームに戻り、再送信すると<strong>同じPRを上書き</strong>
+          します(新しいPRは作られません)。「取り消す」はPRをクローズしてブランチを削除します
+          — 記事も画像もこのブランチにしか無いため、完全に破棄されます。
+        </p>
+
+        {submitError && <p className="news-editor-error">{submitError}</p>}
+
+        <h3>3. 問題なければ</h3>
+        <p>
+          このまま管理者(mathRyukoku / sanoakr)の承認を待ってください。承認・マージされると{" "}
+          <code>main</code> に入り、公開サイトには毎日午前3時(日本時間)の自動デプロイで反映されます。
         </p>
       </div>
     );
@@ -337,6 +427,48 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
     }
   }
 
+  // 「修正する」: 入力内容を保ったままフォームに戻る。次の送信は同じブランチを上書きする。
+  function handleRevise() {
+    setReviseTarget(submitted);
+    setSubmitted(null);
+    setSubmitError(null);
+  }
+
+  async function handleWithdraw() {
+    if (!submitted) return;
+    const ok = window.confirm(
+      "この投稿を取り消します。Pull Requestをクローズし、ブランチを削除します。\n" +
+        "記事と画像はこのブランチにしか存在しないため、元に戻せません。よろしいですか?",
+    );
+    if (!ok) return;
+
+    setSubmitError(null);
+    setWithdrawing(true);
+    try {
+      const res = await fetch("/api/github/news/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          slug: submitted.slug,
+          branch: submitted.branch,
+          prNumber: submitted.prNumber,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        releaseAllPreviews();
+        setWithdrawn(true);
+      } else {
+        setSubmitError(describeError(data));
+      }
+    } catch {
+      setSubmitError("通信に失敗しました。ネットワークを確認して再試行してください。");
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSubmitError(null);
@@ -348,8 +480,15 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
     }
 
     const form = new FormData();
-    form.set("mode", mode);
-    if (mode === "edit" && slug) form.set("slug", slug);
+    // 一度作成したPRを修正して送り直す場合は、新しいPRを作らず同じブランチを上書きする。
+    if (reviseTarget) {
+      form.set("mode", "revise");
+      form.set("slug", reviseTarget.slug);
+      form.set("branch", reviseTarget.branch);
+    } else {
+      form.set("mode", mode);
+      if (mode === "edit" && slug) form.set("slug", slug);
+    }
     form.set("title", title.trim());
     form.set("date", date);
     form.set("description", description.trim());
@@ -387,9 +526,15 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
       });
       const data = await res.json().catch(() => null);
       if (res.ok) {
-        // 成功画面に切り替わるとフォームは消えるので、プレビューURLはここで解放する。
-        releaseAllPreviews();
-        setPrUrl(data.prUrl);
+        // ここではプレビューURLを解放しない — 成功画面から「修正する」でフォームに
+        // 戻れるようになったため、解放すると戻ったときに画像プレビューが壊れる。
+        // 取り消し時とアンマウント時に解放する。
+        setSubmitted({
+          prUrl: data.prUrl,
+          prNumber: data.prNumber,
+          slug: data.slug,
+          branch: data.branch,
+        });
       } else {
         setSubmitError(describeError(data));
       }
@@ -403,6 +548,16 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
   return (
     <form className="news-editor-form" onSubmit={handleSubmit}>
       <h2>{mode === "create" ? "新しい記事を作成" : `記事を編集: ${slug}`}</h2>
+
+      {reviseTarget && (
+        <p className="news-editor-warning">
+          作成済みのPull Request(
+          <a href={reviseTarget.prUrl} target="_blank" rel="noreferrer">
+            #{reviseTarget.prNumber}
+          </a>
+          )を修正しています。送信すると<strong>同じPRが上書きされます</strong>(新しいPRは作られません)。
+        </p>
+      )}
 
       {!templateMatch && (
         <p className="news-editor-warning">
@@ -501,11 +656,34 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
 
       {submitError && <p className="news-editor-error">{submitError}</p>}
 
-      <button type="submit" className="news-editor-button" disabled={submitting || converting}>
-        {submitting ? "送信中…" : converting ? "画像を変換中…" : "Pull Requestを作成"}
-      </button>
+      <div className="news-editor-actions">
+        <button type="submit" className="news-editor-button" disabled={submitting || converting}>
+          {submitting
+            ? "送信中…"
+            : converting
+              ? "画像を変換中…"
+              : reviseTarget
+                ? "このPRを上書きする"
+                : "Pull Requestを作成"}
+        </button>
+        {reviseTarget && (
+          <button
+            type="button"
+            className="news-editor-secondary-button"
+            disabled={submitting || converting}
+            onClick={() => {
+              setReviseTarget(null);
+              setSubmitted(reviseTarget);
+            }}
+          >
+            修正をやめて戻る
+          </button>
+        )}
+      </div>
       <p className="news-editor-note">
-        送信すると @{login} 名義でブランチ・PRが作成されます。ブランチ保護のルールにより、管理者の承認後に main へマージされます。
+        送信すると @{login} 名義で
+        {reviseTarget ? "既存のPRが上書きされます" : "ブランチ・PRが作成されます"}。
+        ブランチ保護のルールにより、管理者の承認後に main へマージされます。
       </p>
     </form>
   );

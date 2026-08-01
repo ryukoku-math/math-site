@@ -179,6 +179,31 @@ export async function findOpenPullRequest(token, owner, repo, headBranch) {
   return body[0];
 }
 
+export async function deleteRef(token, owner, repo, ref) {
+  const { status, body } = await ghFetch(token, `/repos/${owner}/${repo}/git/refs/heads/${ref}`, {
+    method: "DELETE",
+  });
+  // 既に消えている(422/404)場合は成功として扱う — 取り消し操作は冪等でよい。
+  if (status === 204 || status === 404 || status === 422) return;
+  throw new GitHubApiError(status, body);
+}
+
+export async function closePullRequest(token, owner, repo, number) {
+  const { status, body } = await ghFetch(token, `/repos/${owner}/${repo}/pulls/${number}`, {
+    method: "PATCH",
+    body: JSON.stringify({ state: "closed" }),
+  });
+  if (status !== 200) throw new GitHubApiError(status, body);
+  return body;
+}
+
+export async function getPullRequest(token, owner, repo, number) {
+  const { status, body } = await ghFetch(token, `/repos/${owner}/${repo}/pulls/${number}`);
+  if (status === 404) return null;
+  if (status !== 200) throw new GitHubApiError(status, body);
+  return body;
+}
+
 export async function createPullRequest(token, owner, repo, { title, head, base, body: prBody }) {
   const { status, body } = await ghFetch(token, `/repos/${owner}/${repo}/pulls`, {
     method: "POST",
