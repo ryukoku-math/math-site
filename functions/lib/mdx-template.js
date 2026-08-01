@@ -9,7 +9,10 @@ const COLUMNS_BLOCK_RE = /\n\n<Columns cols=\{2\}>\n([\s\S]*?)\n<\/Columns>\s*$/
 const COLUMN_ITEM_RE = /<Column>\s*\n\s*!\[([^\]]*)\]\(([^)]+)\)\s*\n\s*<\/Column>/g;
 
 function yamlString(value) {
-  return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  return `"${String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\r\n|\r|\n/g, "\\n")}"`;
 }
 
 function escapeAlt(alt) {

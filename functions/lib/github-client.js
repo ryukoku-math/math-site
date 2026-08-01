@@ -129,9 +129,12 @@ export async function createRef(token, owner, repo, ref, sha) {
 }
 
 export async function updateRef(token, owner, repo, ref, sha) {
+  // 新しいコミットはその都度現在のbase branch先端から作り直すため、既存ブランチの
+  // 直前のコミットと祖先関係にあるとは限らない(fast-forwardではない)。同じ編集用
+  // ブランチ・PRを編集者本人が更新するだけなので、force更新で問題ない。
   return ghFetch(token, `/repos/${owner}/${repo}/git/refs/heads/${ref}`, {
     method: "PATCH",
-    body: JSON.stringify({ sha, force: false }),
+    body: JSON.stringify({ sha, force: true }),
   });
 }
 

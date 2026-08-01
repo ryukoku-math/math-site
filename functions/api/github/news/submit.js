@@ -77,15 +77,24 @@ export async function onRequestPost({ request, env }) {
   let slug = String(form.get("slug") ?? "");
   if (mode === "create") {
     slug = generateSlug(date);
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    let collided = true;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
       let existing;
       try {
         existing = await getFileContent(token, owner, repo, `docs/news/${slug}.mdx`);
       } catch (err) {
         return toApiErrorResponse(err);
       }
-      if (!existing) break;
+      if (!existing) {
+        collided = false;
+        break;
+      }
       slug = generateSlug(date);
+    }
+    // 4回連続で衝突するのは天文学的な確率だが、万一の場合に既存記事をサイレントに
+    // 上書きしないよう、最後まで衝突が解消しなければここで打ち切る。
+    if (collided) {
+      return Response.json({ error: "slug_collision" }, { status: 409 });
     }
   } else if (!slug || !/^[a-z0-9-]+$/i.test(slug)) {
     return Response.json({ error: "invalid_slug" }, { status: 400 });
