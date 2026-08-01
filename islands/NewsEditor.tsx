@@ -75,7 +75,7 @@ function ArticleList() {
       if (status === 200) {
         setArticles(data.articles);
       } else {
-        setError(describeError(data?.error));
+        setError(describeError(data));
       }
     });
   }, []);
@@ -104,10 +104,24 @@ function ArticleList() {
   );
 }
 
-function describeError(code?: string): string {
-  switch (code) {
+// data は API のエラーレスポンス全体。GitHubの原文(message)が付いている場合は
+// 末尾に添える — 権限の問題に見えて実際は別原因、というケースを切り分けられるように。
+function describeError(data?: { error?: string; message?: string } | null): string {
+  const detail = data?.message ? `\nGitHubからの応答: ${data.message}` : "";
+  switch (data?.error) {
+    case "oauth_app_not_approved":
+      return (
+        "この連携アプリがOrganizationで承認されていないため、書き込みができません。" +
+        "Organizationのオーナーが GitHub の Settings → Third-party Access で" +
+        "このOAuth Appへのアクセスを承認する必要があります。" +
+        detail
+      );
     case "not_a_collaborator":
-      return "このリポジトリへの書き込み権限がありません。管理者(mathRyukoku または sanoakr)にコラボレーター登録を依頼してください。";
+      return (
+        "このリポジトリへの書き込みが拒否されました。書き込み権限がない可能性があります" +
+        "(管理者にコラボレーター登録を依頼してください)。" +
+        detail
+      );
     case "rate_limited":
       return "GitHub APIのレート制限に達しました。しばらく待ってから再試行してください。";
     case "not_authenticated":
@@ -122,7 +136,7 @@ function describeError(code?: string): string {
     case "slug_collision":
       return "記事IDの生成に失敗しました。もう一度送信してください。";
     default:
-      return "エラーが発生しました。しばらく待ってから再試行してください。";
+      return "エラーが発生しました。しばらく待ってから再試行してください。" + detail;
   }
 }
 
@@ -157,7 +171,7 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
     if (mode !== "edit" || !slug) return;
     apiGet(`/api/github/news/get?slug=${encodeURIComponent(slug)}`).then(({ status, data }) => {
       if (status !== 200) {
-        setLoadError(describeError(data?.error));
+        setLoadError(describeError(data));
         setLoading(false);
         return;
       }
@@ -303,7 +317,7 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
         releaseAllPreviews();
         setPrUrl(data.prUrl);
       } else {
-        setSubmitError(describeError(data?.error));
+        setSubmitError(describeError(data));
       }
     } catch {
       setSubmitError("通信に失敗しました。ネットワークを確認して再試行してください。");

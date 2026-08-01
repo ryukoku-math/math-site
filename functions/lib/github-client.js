@@ -197,8 +197,17 @@ export function toApiErrorResponse(err) {
     if (/rate limit/i.test(message)) {
       return Response.json({ error: "rate_limited" }, { status: 429 });
     }
+    // Organization側でOAuth Appのアクセス制限が有効かつこのAppが未承認だと、
+    // 公開リポジトリの読み取りは通るのに書き込みだけ403になる。権限不足と
+    // 区別できないと「コラボレーター登録を依頼してください」と案内してしまい、
+    // 管理者が自分の権限を疑い続けることになる(実際にそうなった)。
+    if (/OAuth App access restrictions/i.test(message)) {
+      return Response.json({ error: "oauth_app_not_approved", message }, { status: 403 });
+    }
+    // 権限不足として案内する場合も、GitHubの原文を必ず添える。ここで潰すと
+    // 原因の切り分けができなくなる。
     if (err.status === 403 || err.status === 404) {
-      return Response.json({ error: "not_a_collaborator" }, { status: 403 });
+      return Response.json({ error: "not_a_collaborator", status: err.status, message }, { status: 403 });
     }
     return Response.json({ error: "github_api_error", status: err.status, message }, { status: 502 });
   }

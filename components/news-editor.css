@@ -6,6 +6,8 @@
 }
 .news-editor-error {
   color: #b3261e;
+  /* GitHubの原文を改行して添えることがあるので、改行を保持する */
+  white-space: pre-wrap;
 }
 .news-editor-warning {
   background: var(--blume-muted, #f2f0ed);
