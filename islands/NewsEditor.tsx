@@ -112,6 +112,15 @@ function describeError(code?: string): string {
       return "GitHub APIのレート制限に達しました。しばらく待ってから再試行してください。";
     case "not_authenticated":
       return "ログインが必要です。ページを再読み込みしてください。";
+    case "news_dir_not_found":
+    case "base_branch_not_found":
+      return "リポジトリの設定(参照先のブランチ)が正しくないようです。管理者に連絡してください。";
+    case "cover_image_required":
+      return "カバー画像を1枚選択してください。";
+    case "images_too_large":
+      return "画像の合計サイズが大きすぎます。枚数を減らすか、画像を圧縮してください。";
+    case "slug_collision":
+      return "記事IDの生成に失敗しました。もう一度送信してください。";
     default:
       return "エラーが発生しました。しばらく待ってから再試行してください。";
   }
@@ -190,36 +199,33 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
 
   // プレビュー用のオブジェクトURLは差し替え・削除のたびに解放する。放置すると
   // 画像を何度も選び直す編集セッションでBlobがメモリに溜まり続ける。
-  function releasePreview(url?: string) {
+  // createObjectURL/revokeObjectURL は必ずsetState更新関数の「外」で呼ぶ —
+  // 更新関数は純粋でなければならず、Reactが二重に呼んだ場合にURLを2つ作って
+  // 片方を取りこぼす(解放漏れを直すつもりで漏らす)ことになる。
+  function releasePreview(url?: string | null) {
     if (url) URL.revokeObjectURL(url);
   }
 
   function removeImage(index: number) {
-    setImages((prev) => {
-      releasePreview(prev[index]?.previewUrl);
-      return prev.filter((_, i) => i !== index);
-    });
+    releasePreview(images[index]?.previewUrl);
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
+    releasePreview(newCoverPreview);
     setNewCoverFile(file);
-    setNewCoverPreview((prev) => {
-      releasePreview(prev ?? undefined);
-      return file ? URL.createObjectURL(file) : null;
-    });
+    setNewCoverPreview(file ? URL.createObjectURL(file) : null);
   }
 
   function handleImageFileChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    releasePreview(images[index]?.previewUrl);
+    const previewUrl = URL.createObjectURL(file);
     // 既存画像のスロットで選び直した場合も、新しいファイルへの差し替えとして扱う。
     setImages((prev) =>
-      prev.map((img, i) => {
-        if (i !== index) return img;
-        releasePreview(img.previewUrl);
-        return { ...img, file, previewUrl: URL.createObjectURL(file), source: "new", path: undefined };
-      }),
+      prev.map((img, i) => (i === index ? { ...img, file, previewUrl, source: "new", path: undefined } : img)),
     );
   }
 

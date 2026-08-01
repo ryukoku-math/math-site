@@ -26,6 +26,13 @@ export async function onRequestGet({ request, env }) {
     return toApiErrorResponse(err);
   }
 
+  if (entries === null) {
+    return Response.json(
+      { error: "news_dir_not_found", ref: `${env.GITHUB_REPO_BRANCH}:docs/news` },
+      { status: 500 },
+    );
+  }
+
   const articles = entries
     .filter((entry) => entry.name.endsWith(".mdx"))
     .map((entry) => {

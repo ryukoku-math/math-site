@@ -103,8 +103,11 @@ export async function fetchDirectoryWithContents(token, owner, repo, branch, pat
   // GraphQLはエラーでもHTTP 200を返すので、bodyのerrorsを見る必要がある。
   if (body?.errors?.length) throw new GitHubApiError(502, { message: body.errors[0].message });
 
+  // 指定した <branch>:<path> が解決できないと object が null になる。空ディレクトリと
+  // 区別せず [] を返すと、GITHUB_REPO_BRANCH の設定ミスが「記事0件」に見えてしまうので
+  // null を返して呼び出し側でエラーにする。
   const entries = body?.data?.repository?.object?.entries;
-  if (!Array.isArray(entries)) return [];
+  if (!Array.isArray(entries)) return null;
   return entries
     .filter((entry) => entry.type === "blob")
     .map((entry) => ({ name: entry.name, text: entry.object?.text ?? "" }));
