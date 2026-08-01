@@ -23,6 +23,47 @@ async function apiGet(path: string) {
   return { status: res.status, data };
 }
 
+// 縮小後の長辺の上限。既存記事のカバー画像は約512px幅なので、本文中の表示にも
+// 十分な余裕がある大きさ。
+const MAX_IMAGE_DIMENSION = 1200;
+const JPEG_QUALITY = 0.85;
+
+// アップロードされた画像を必ずJPEGに再エンコードし、長辺を縮小する。
+// iPhoneの写真は標準でHEIC形式で、Chrome/Firefoxでは表示できない —
+// 実際に本番でカバー画像が cover.heic として保存され、壊れた画像になった。
+// スマホ写真はそのままだと数MBあり、1記事あたりの送信上限もすぐ使い切る。
+// HEICをデコードできるのはSafari等に限られるが、HEICの出所がまさにApple端末なので
+// 実用上はここで吸収できる。デコードできない場合は理由の分かるエラーにする。
+async function normalizeImage(file: File): Promise<File> {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error(
+      `「${file.name}」はこのブラウザで読み込めない画像形式です。` +
+        "JPEGまたはPNGに変換してからアップロードしてください" +
+        "(iPhoneの写真はHEIC形式のことがあります)。",
+    );
+  }
+
+  const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("画像の変換に失敗しました。別のブラウザでお試しください。");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY),
+  );
+  if (!blob) throw new Error("画像の変換に失敗しました。別のブラウザでお試しください。");
+
+  const base = file.name.replace(/\.[^.]+$/, "") || "image";
+  return new File([blob], `${base}.jpg`, { type: "image/jpeg" });
+}
+
 export default function NewsEditor({ mode, slug }: Props) {
   const [me, setMe] = useState<Me | null>(null);
 
@@ -133,6 +174,8 @@ function describeError(data?: { error?: string; message?: string } | null): stri
       return "カバー画像を1枚選択してください。";
     case "images_too_large":
       return "画像の合計サイズが大きすぎます。枚数を減らすか、画像を圧縮してください。";
+    case "unsupported_image_format":
+      return "対応していない画像形式です。JPEGまたはPNGに変換してからアップロードしてください。";
     case "slug_collision":
       return "記事IDの生成に失敗しました。もう一度送信してください。";
     default:
@@ -159,6 +202,8 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [prUrl, setPrUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [converting, setConverting] = useState(false);
 
   // 生成済みのプレビューURLを把握しておき、アンマウント時に取りこぼしなく解放する。
   const livePreviews = useRef<Set<string>>(new Set());
@@ -207,10 +252,9 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
           毎日午前3時(日本時間)の自動デプロイで反映されます。
         </p>
         <p>
-          内容の確認はPRの「Files changed」で行ってください。PRに表示されるCloudflare Pagesの
-          プレビューURLは、このサイトの構成上<strong>変更内容が反映されません</strong>
-          (すべてのページが本番サーバーから配信されるため、プレビューURLでも現在の{" "}
-          <code>main</code> の内容が表示されます)。
+          マージ前に見た目を確認できます。PRページのチェック一覧に表示される Cloudflare Pages の
+          <strong>プレビューURL</strong>を開いてください(ビルドに2〜3分かかります)。
+          そこには、この記事が追加された状態のサイトが表示されます。
         </p>
       </div>
     );
@@ -251,22 +295,46 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
-    releasePreview(newCoverPreview);
-    setNewCoverFile(file);
-    setNewCoverPreview(file ? createPreview(file) : null);
+  async function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = e.target.files?.[0] ?? null;
+    setImageError(null);
+    if (!picked) {
+      releasePreview(newCoverPreview);
+      setNewCoverFile(null);
+      setNewCoverPreview(null);
+      return;
+    }
+    setConverting(true);
+    try {
+      const file = await normalizeImage(picked);
+      releasePreview(newCoverPreview);
+      setNewCoverFile(file);
+      setNewCoverPreview(createPreview(file));
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "画像の変換に失敗しました。");
+    } finally {
+      setConverting(false);
+    }
   }
 
-  function handleImageFileChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    releasePreview(images[index]?.previewUrl);
-    const previewUrl = createPreview(file);
-    // 既存画像のスロットで選び直した場合も、新しいファイルへの差し替えとして扱う。
-    setImages((prev) =>
-      prev.map((img, i) => (i === index ? { ...img, file, previewUrl, source: "new", path: undefined } : img)),
-    );
+  async function handleImageFileChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = e.target.files?.[0];
+    if (!picked) return;
+    setImageError(null);
+    setConverting(true);
+    try {
+      const file = await normalizeImage(picked);
+      releasePreview(images[index]?.previewUrl);
+      const previewUrl = createPreview(file);
+      // 既存画像のスロットで選び直した場合も、新しいファイルへの差し替えとして扱う。
+      setImages((prev) =>
+        prev.map((img, i) => (i === index ? { ...img, file, previewUrl, source: "new", path: undefined } : img)),
+      );
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "画像の変換に失敗しました。");
+    } finally {
+      setConverting(false);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -367,7 +435,12 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
         <legend>
           カバー画像 <span className="news-editor-required">必須</span>
         </legend>
-        <p className="news-editor-hint">記事の先頭に大きく表示される画像です。</p>
+        <p className="news-editor-hint">
+          記事の先頭に大きく表示される画像です。アップロードした画像は自動でJPEGに変換し、
+          長辺{MAX_IMAGE_DIMENSION}pxに縮小して保存します。
+        </p>
+        {converting && <p className="news-editor-status">画像を変換中…</p>}
+        {imageError && <p className="news-editor-error">{imageError}</p>}
         {newCoverPreview || existingCoverPath ? (
           <div className="news-editor-cover-preview">
             <img src={newCoverPreview ?? existingCoverPath ?? undefined} alt="" />
@@ -428,8 +501,8 @@ function ArticleForm({ mode, slug, login }: { mode: "create" | "edit"; slug?: st
 
       {submitError && <p className="news-editor-error">{submitError}</p>}
 
-      <button type="submit" className="news-editor-button" disabled={submitting}>
-        {submitting ? "送信中…" : "Pull Requestを作成"}
+      <button type="submit" className="news-editor-button" disabled={submitting || converting}>
+        {submitting ? "送信中…" : converting ? "画像を変換中…" : "Pull Requestを作成"}
       </button>
       <p className="news-editor-note">
         送信すると @{login} 名義でブランチ・PRが作成されます。ブランチ保護のルールにより、管理者の承認後に main へマージされます。

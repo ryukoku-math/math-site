@@ -19,6 +19,11 @@ import { generateSlug } from "../../../lib/slug.js";
 // フォームからの画像添付が際限なく大きくならないよう、送信全体の合計サイズに緩い上限を設ける。
 const MAX_TOTAL_BYTES = 20 * 1024 * 1024;
 
+// ブラウザが表示できる形式だけを受け付ける。クライアント側でJPEGに再エンコードして
+// いるので通常ここには到達しないが、HEIC(iPhoneの標準形式。Chrome/Firefoxで表示不可)が
+// リポジトリに入って壊れた画像になる事故を実際に起こしたため、保険として弾く。
+const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif"]);
+
 export async function onRequestPost({ request, env }) {
   const session = await getSessionFromRequest(request, env);
   if (!session) return Response.json({ error: "not_authenticated" }, { status: 401 });
@@ -67,7 +72,12 @@ export async function onRequestPost({ request, env }) {
 
   let totalBytes = 0;
   for (const [, value] of form.entries()) {
-    if (value instanceof File) totalBytes += value.size;
+    if (!(value instanceof File)) continue;
+    totalBytes += value.size;
+    const ext = extensionOf(value.name);
+    if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
+      return Response.json({ error: "unsupported_image_format", extension: ext }, { status: 400 });
+    }
   }
   if (totalBytes > MAX_TOTAL_BYTES) {
     return Response.json({ error: "images_too_large" }, { status: 400 });
