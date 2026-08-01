@@ -12,11 +12,10 @@ export async function onRequest(context) {
   // News EditorのGitHub認証・PR作成処理(/api/github/*)だけはCloudflare Pages
   // Functions側で完結させる必要がある — GitHub OAuthのシークレットはCloudflare
   // Pagesの環境変数としてのみ存在し、whale2の.envには無い。
-  // 一方 /admin/* 以下のページ自体(pages/admin/news/*.astro)は動的レンダリング
-  // (prerender: false)の通常のAstroページで、他の全ページと同じくwhale2の
-  // Node SSRサーバーが普通にレンダリングできる — Cloudflareの静的フォールバック
-  // ビルドにはSSR用のNodeランタイムが無いため、ここを誤ってプロキシから除外すると
-  // 動的な/admin/news/<slug>が404になる。
+  // 逆に /admin/* 配下のページ自体は除外してはいけない。このPagesプロジェクトは
+  // ビルドを実行せず pages-fallback/ の1枚だけを配信するため、next()にはページの
+  // 実体が無く、除外すると「一時的にご利用いただけません」が返るだけになる。
+  // /admin/* も他の全ページと同様、whale2のNode SSRサーバーが配信する。
   if (url.pathname.startsWith("/api/github/")) {
     return next();
   }
@@ -43,19 +42,19 @@ export async function onRequest(context) {
     });
     clearTimeout(timeout);
 
-    // 404も5xxと同様にフォールバック対象にする — whale2への本番反映は毎日午前3時の
-    // 自動デプロイ待ちのため、Cloudflare側では最新ビルドに存在するページでも、
-    // whale2にまだ反映されていない新しいルートは素の404を返してくる。本当に
-    // 存在しないページなら、フォールバック先の静的ビルドでもどのみち404になるだけで
-    // 悪化はしない。401/403/400などそれ以外の4xxは正しいアプリケーション応答なので
-    // ここでは対象にしない。
-    if (originResponse.status >= 500 || originResponse.status === 404) {
+    // 404はフォールバックさせず、そのままクライアントに返す。
+    // このPagesプロジェクトはビルドを実行せず、配信対象は pages-fallback/
+    // (「一時的にご利用いただけません」の1枚) だけなので、next()で拾える
+    // サイト本体の静的ビルドは存在しない。404をフォールバックに回すと、
+    // whale2が返した正しい404(Blumeの Page not found ページ)が
+    // 「サーバーに接続できません」+ ステータス200 に化けてしまう。
+    if (originResponse.status >= 500) {
       throw new Error(`origin returned ${originResponse.status}`);
     }
     return originResponse;
   } catch (err) {
     clearTimeout(timeout);
-    // whale2に到達不能、または該当ルートが未反映 → Pagesの静的コンテンツへフォールバック
+    // whale2に到達不能 → Pagesの「一時的にご利用いただけません」ページへフォールバック
     return next();
   }
 }
