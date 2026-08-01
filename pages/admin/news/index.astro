@@ -1,0 +1,24 @@
+---
+import RootLayout from "blume/components/layout/RootLayout.astro";
+import data from "blume:data";
+import NewsEditor from "../../../islands/NewsEditor.tsx";
+import "../../../components/news-editor.css";
+
+const { config } = data;
+---
+
+<RootLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  navigation={data.navigation}
+  page={{ title: "News Editor", route: "/admin/news" }}
+  headings={[]}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  indexable={false}
+>
+  <h1>News Editor</h1>
+  <p>ニュース記事の新規作成・編集を行い、GitHub上にPull Requestを作成します。</p>
+  <NewsEditor client:load mode="list" />
+</RootLayout>

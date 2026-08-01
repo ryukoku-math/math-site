@@ -3,5 +3,6 @@ dist/
 .env
 node_modules/
 .blume-verify/
+.wrangler/
 .DS_Store
 CLAUDE.md

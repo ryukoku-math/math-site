@@ -1,0 +1,31 @@
+---
+import RootLayout from "blume/components/layout/RootLayout.astro";
+import data from "blume:data";
+import NewsEditor from "../../../islands/NewsEditor.tsx";
+import "../../../components/news-editor.css";
+
+// このページ自体はどのslugが来ても同じシェル(NewsEditor island)を描画するだけで、
+// 実際の記事データはクライアント側で /api/github/news/get を叩いて取得する。
+// slugの集合はGitHub側の状態次第でビルド時には決まらないため、getStaticPathsで
+// 静的パスを列挙するのではなくSSR(prerender: false)にする。
+export const prerender = false;
+
+const { config } = data;
+const { slug } = Astro.params;
+---
+
+<RootLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  navigation={data.navigation}
+  page={{ title: "News Editor — 編集", route: `/admin/news/${slug}` }}
+  headings={[]}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  indexable={false}
+>
+  <h1>News Editor</h1>
+  <p><a href="/admin/news">← 記事一覧に戻る</a></p>
+  <NewsEditor client:load mode="edit" slug={slug} />
+</RootLayout>
