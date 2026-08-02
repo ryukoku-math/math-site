@@ -1,7 +1,7 @@
 # math-site
 
 龍谷大学 先端理工学部 数理・情報科学課程の公式サイト
-**[www.math.ryukoku.ac.jp](https://www.math.ryukoku.ac.jp)** のソースリポジトリです。
+**[whale2.math.ryukoku.ac.jp](https://whale2.math.ryukoku.ac.jp/)** のソースリポジトリです。
 
 Markdownベースのドキュメントフレームワーク [Blume](https://useblume.dev)（Astro/Vite製）で構築されて
 います。このリポジトリにはコンテンツ・設定・少数の手書きAstroページ/コンポーネントのみが含まれ、
