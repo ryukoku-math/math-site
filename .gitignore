@@ -6,3 +6,5 @@ node_modules/
 .wrangler/
 .DS_Store
 CLAUDE.md
+
+temp/
