@@ -89,6 +89,17 @@ const openCampusPrograms = [
 
 const OC_SEASON_LABEL = { summer: "夏", autumn: "秋" };
 
+// 開催済みの日程。ここに追記すると該当日付に取り消し線が付く。
+const OC_FINISHED_DATES = new Set(["8/1", "8/2"]);
+
+// "8/1（土）" のような表記から日付部分だけを取り出して開催済みか判定する
+const isFinishedDate = (label: string) =>
+  OC_FINISHED_DATES.has(label.replace(/（.*$/, "").trim());
+
+// "8/1・8/23" を「・」区切りのまま、開催済みの日付だけ取り消し線を付けられる形に分解する
+const splitDates = (value: string) =>
+  value.split("・").map((label) => ({ label, done: isFinishedDate(label) }));
+
 // `date:` frontmatter comes back as a native Date (YAML's implicit date
 // coercion), not a string — format it explicitly rather than rendering
 // Date#toString()'s verbose output.
@@ -175,7 +186,13 @@ const news = (await getCollection("docs"))
         {
           openCampusDates.map((season) => (
             <p class={`oc-dates oc-dates--${season.key}`}>
-              {season.label}　{season.dates}開催
+              {season.label}　{splitDates(season.dates).map((d, i) => (
+                <>
+                  {i > 0 && "・"}
+                  {d.done ? <s class="oc-done">{d.label}</s> : d.label}
+                </>
+              ))}
+              開催
             </p>
           ))
         }
@@ -191,14 +208,21 @@ const news = (await getCollection("docs"))
                         <span class={`oc-tag oc-tag--${s}`}>{OC_SEASON_LABEL[s]}</span>
                       ))}
                     </span>
-                    <span class="oc-badge">{item.when}</span>
+                    <span class="oc-badge">
+                      {splitDates(item.when).map((d, i) => (
+                        <>
+                          {i > 0 && "・"}
+                          {d.done ? <s class="oc-done">{d.label}</s> : d.label}
+                        </>
+                      ))}
+                    </span>
                     <strong class="oc-title">{item.title}</strong>
                   </div>
                   <p class="oc-desc">{item.desc}</p>
                   {item.sub && (
                     <ul class="oc-sub">
                       {item.sub.map((s) => (
-                        <li>
+                        <li class={isFinishedDate(s.when) ? "oc-done-row" : undefined}>
                           <span class="oc-badge oc-badge-sm">{s.when}</span>
                           {s.text}
                         </li>
@@ -575,6 +599,15 @@ const news = (await getCollection("docs"))
   .callout .oc-badge-sm {
     font-size: 0.65rem;
     padding: 0.1rem 0.45rem;
+  }
+  /* 開催済みの日程: 取り消し線 + トーンダウンで終了が分かるようにする */
+  .oc-done {
+    text-decoration-thickness: 1px;
+    opacity: 0.65;
+  }
+  .callout .oc-sub li.oc-done-row {
+    opacity: 0.55;
+    text-decoration: line-through;
   }
 
   .news-teaser {
