@@ -5,6 +5,20 @@ export default defineConfig({
   description: "龍谷大学 先端理工学部 数理・情報科学課程",
   logo: "/images/zero.png",
   feedback: false,
+  analytics: {
+    scripts: [
+      {
+        src: "https://www.googletagmanager.com/gtag/js?id=G-MYSRG869PY",
+        strategy: "defer",
+      },
+      {
+        content: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-MYSRG869PY');`,
+      },
+    ],
+  },
   theme: {
     accent: "#f50000",
     radius: "sm",
