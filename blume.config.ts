@@ -36,15 +36,17 @@ gtag('config', 'G-MYSRG869PY');`,
     ask: {
       enabled: true,
       provider: "openai-compatible",
-      // slab-llm 常駐の vllm-mlx。thinking はサーバー起動時に無効化してあるため、
-      // ここから特別なパラメータを送らなくても数秒で応答が返る（Ollama の
-      // OpenAI 互換エンドポイントでは thinking を止められず 40 秒以上かかっていた）。
-      baseUrl: "http://slab-llm.math.ryukoku.ac.jp:8000/v1",
-      // vllm-mlx は認証なし（アクセス制御は slab-llm 側の pf が担う）。この変数は
+      // whale2 ローカルの ask-shim 経由で slab-llm の Ollama を叩く。
+      //
+      // 直接 Ollama を指さない理由: Ollama の OpenAI 互換エンドポイントは
+      // think:false を無視するため、素で叩くと thinking の生成に 40 秒以上かかる。
+      // reasoning_effort:"none" を送れば抑制できるが、AskConfig にはリクエスト
+      // フィールドを足す口が無い。ask-shim はそれを 1 個差し込むだけの中継。
+      baseUrl: "http://127.0.0.1:11435/v1",
+      // Ollama は認証なし（アクセス制御は slab-llm 側の pf が担う）。この変数は
       // ダミー値を送るためだけに残している。
       apiKeyEnv: "OLLAMA_API_KEY",
-      // --served-model-name のエイリアス。量子化を差し替えてもこの名前は変わらない。
-      model: "qwen3.8",
+      model: "qwen3.8:27b-mlx",
       suggestions: [
         { label: "数理・情報科学課程にはどんな教員がいますか？", icon: "users" },
         { label: "オープンキャンパスではどんな体験ができますか？", icon: "flask-conical" },
