@@ -8,7 +8,7 @@
     "doctor": "blume doctor"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^1.0.45",
-    "blume": "^1.0.4"
+    "@ai-sdk/openai-compatible": "^3.0.30",
+    "blume": "^1.4.3"
   }
 }
