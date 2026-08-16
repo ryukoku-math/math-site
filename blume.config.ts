@@ -5,6 +5,17 @@ export default defineConfig({
   description: "龍谷大学 先端理工学部 数理・情報科学課程",
   logo: "/images/zero.png",
   feedback: false,
+  // 検索索引のトークナイザは i18n.defaultLocale から選ばれる（blume 1.2.1 以降）。
+  // 日本語・中国語・韓国語・タイ語では Intl.Segmenter による分かち書きに切り替わり、
+  // 既定の英語トークナイザが日本語をすべて区切り文字として捨てる問題を回避する。
+  // サイト内検索・MCP の search_docs・Ask AI の grounding が同じ索引を共有するため、
+  // ここを設定しない限りどれも日本語では 0 件になる。
+  // 単一ロケールなので URL 接頭辞は付かず（hideDefaultLocalePrefix の既定は true）、
+  // 言語切替 UI も出ない（Header は locales が 2 つ以上のときだけ描画する）。
+  i18n: {
+    defaultLocale: "ja",
+    locales: [{ code: "ja", label: "日本語" }],
+  },
   analytics: {
     scripts: [
       {
