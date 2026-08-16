@@ -16,6 +16,16 @@ export default defineConfig({
     defaultLocale: "ja",
     locales: [{ code: "ja", label: "日本語" }],
   },
+  search: {
+    indexing: {
+      // news / awards は sidebar.hidden: true（ナビには出さず、pages/news
+      // ・pages/awards の一覧ページから辿らせる）。既定ではそれらが丸ごと
+      // 検索索引から外れ、180ページ中 7ページしか索引されていなかった。
+      // サイト内検索と Ask AI の grounding の両方がこの索引を使うため、
+      // ニュース・受賞記事について一切答えられない状態になっていた。
+      includeHiddenPages: true,
+    },
+  },
   analytics: {
     scripts: [
       {
