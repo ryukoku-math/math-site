@@ -6,7 +6,18 @@ const TIMEOUT_MS = 3000;
 // Ask AI streams an LLM completion — a few seconds of generation time is
 // normal, not a sign the origin is down, so it needs a much longer allowance
 // than the fast-fail used for ordinary page requests.
-const ASK_TIMEOUT_MS = 30000;
+//
+// The budget is time-to-first-byte, not total generation: `clearTimeout` runs
+// as soon as `fetch` resolves, which is when the origin's response headers
+// arrive. Those headers wait on the model prefilling the grounded prompt, and
+// the retrieved excerpts injected ahead of the question differ per query, so
+// the prefix Ollama can reuse across requests is only the fixed instruction —
+// every new question pays a full prefill. 30s was set while retrieval was
+// silently returning nothing, which made the prompt tiny and the response
+// near-instant; once grounding started working, measured TTFB rose to 21–36s
+// (48.9s on a synthetic 10,000-character prompt) and real questions began
+// falling through to the static fallback's 405.
+const ASK_TIMEOUT_MS = 60000;
 
 export async function onRequest(context) {
   const { request, next, env } = context;
