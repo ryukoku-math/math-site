@@ -5,6 +5,16 @@ export default defineConfig({
   description: "龍谷大学 先端理工学部 数理・情報科学課程",
   logo: "/images/zero.png",
   feedback: false,
+  search: {
+    indexing: {
+      // news / awards は sidebar.hidden: true（ナビには出さず、pages/news
+      // ・pages/awards の一覧ページから辿らせる）。既定ではそれらが丸ごと
+      // 検索索引から外れ、180ページ中 7ページしか索引されていなかった。
+      // サイト内検索と Ask AI の grounding の両方がこの索引を使うため、
+      // ニュース・受賞記事について一切答えられない状態になっていた。
+      includeHiddenPages: true,
+    },
+  },
   analytics: {
     scripts: [
       {
