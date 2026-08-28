@@ -90,11 +90,28 @@ const openCampusPrograms = [
 const OC_SEASON_LABEL = { summer: "夏", autumn: "秋" };
 
 // 開催済みの日程。ここに追記すると該当日付に取り消し線が付く。
-const OC_FINISHED_DATES = new Set(["8/1", "8/2"]);
+// 本文が生成されるのはビルド時(トップページはprerender)で、whale2の再ビルドは
+// mainに新しいコミットがある日しか走らないため、現在日時から自動判定はできない。
+// 開催が終わったら手で追記する運用にしている。
+const OC_FINISHED_DATES = new Set(["8/1", "8/2", "8/22", "8/23"]);
 
 // "8/1（土）" のような表記から日付部分だけを取り出して開催済みか判定する
 const isFinishedDate = (label: string) =>
   OC_FINISHED_DATES.has(label.replace(/（.*$/, "").trim());
+
+// 季節ごとの開催日がすべて済んでいればその季節は終了。企画側の「全日程」のように
+// 日付を持たない表記は、この判定でしか終了扱いにできない。
+const finishedSeasons = new Set(
+  openCampusDates
+    .filter((season) => season.dates.split("・").every(isFinishedDate))
+    .map((season) => season.key)
+);
+
+// 企画は、実施する季節がすべて終了し、かつ明示された日程もすべて済んだときに終了。
+// 夏・秋の両方でやる企画は夏が終わっても終了にしない。
+const isFinishedProgram = (item: { seasons: string[]; when: string }) =>
+  item.seasons.every((season) => finishedSeasons.has(season)) &&
+  item.when.split("・").every((label) => label === "全日程" || isFinishedDate(label));
 
 // "8/1・8/23" を「・」区切りのまま、開催済みの日付だけ取り消し線を付けられる形に分解する
 const splitDates = (value: string) =>
@@ -200,8 +217,10 @@ const news = (await getCollection("docs"))
           <div class="callout-label">まなびエキスポ／オープンラボ（体育館・10:00〜15:00、夏開催時）</div>
           <ul>
             {
-              openCampusPrograms.map((item) => (
-                <li>
+              openCampusPrograms.map((item) => {
+                const finished = isFinishedProgram(item);
+                return (
+                <li class={finished ? "oc-item--done" : undefined}>
                   <div class="oc-item-head">
                     <span class="oc-season-tags">
                       {item.seasons.map((s) => (
@@ -212,11 +231,13 @@ const news = (await getCollection("docs"))
                       {splitDates(item.when).map((d, i) => (
                         <>
                           {i > 0 && "・"}
-                          {d.done ? <s class="oc-done">{d.label}</s> : d.label}
+                          {d.done || finished ? <s class="oc-done">{d.label}</s> : d.label}
                         </>
                       ))}
                     </span>
-                    <strong class="oc-title">{item.title}</strong>
+                    <strong class="oc-title">
+                      {finished ? <s class="oc-done">{item.title}</s> : item.title}
+                    </strong>
                   </div>
                   <p class="oc-desc">{item.desc}</p>
                   {item.sub && (
@@ -230,7 +251,8 @@ const news = (await getCollection("docs"))
                     </ul>
                   )}
                 </li>
-              ))
+                );
+              })
             }
           </ul>
           <a class="link-more" href="https://sentan.rikou.ryukoku.ac.jp/oc_oplab/">
@@ -608,6 +630,13 @@ const news = (await getCollection("docs"))
   .callout .oc-sub li.oc-done-row {
     opacity: 0.55;
     text-decoration: line-through;
+  }
+  /* 終了した企画。説明文まで取り消し線を引くと読みにくいので、見出し(日程バッジと
+     タイトル)だけ取り消し線にする。行全体のopacityは下げない —— 内側の .oc-done や
+     .oc-done-row の薄さと掛け算になり、サブ日程が読めない濃さまで落ちるため。
+     取り消し線の付かない季節タグだけが浮くので、ここだけトーンを合わせる。 */
+  .oc-item--done .oc-tag {
+    opacity: 0.65;
   }
 
   .news-teaser {
