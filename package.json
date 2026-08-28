@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.30",
-    "blume": "^1.4.3"
+    "blume": "^1.4.3",
+    "zod": "^4.4.3"
   }
 }
