@@ -55,7 +55,7 @@ gtag('config', 'G-MYSRG869PY');`,
   },
   ai: {
     ask: {
-      enabled: true,
+      enabled: false,
       provider: "openai-compatible",
       // whale2 ローカルの ask-shim 経由で slab-llm の Ollama を叩く。
       //
