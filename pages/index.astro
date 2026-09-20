@@ -213,6 +213,7 @@ const news = (await getCollection("docs"))
             </p>
           ))
         }
+        <p class="oc-next">次回は春、2027年3月中旬ごろに開催予定です。</p>
         <div class="callout">
           <div class="callout-label">まなびエキスポ／オープンラボ（体育館・10:00〜15:00、夏開催時）</div>
           <ul>
@@ -553,6 +554,14 @@ const news = (await getCollection("docs"))
   /* 秋のオープンキャンパスは夏(ブランドの赤)と見分けがつくよう暖色のオレンジに */
   .oc-dates--autumn {
     color: #b45309;
+  }
+  /* 全日程終了後の次回開催予告。日程が確定したらoc-datesの行に差し替える */
+  .oc-next {
+    font-family: var(--blume-font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--blume-muted-foreground, #6b6660);
+    margin: 0 0 1.25rem;
   }
 
   .callout .oc-item-head {
