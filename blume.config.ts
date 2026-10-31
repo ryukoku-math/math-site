@@ -49,6 +49,11 @@ gtag('config', 'G-MYSRG869PY');`,
       mono: "ibm-plex-mono",
     },
   },
+  seo: {
+    // blume の自動生成 robots.txt は「Allow: /」固定で Disallow を足せないため、
+    // 生成を止めて public/robots.txt を配信する（/admin/ を除外するため）。
+    robots: false,
+  },
   deployment: {
     output: "server",
     adapter: "node",
