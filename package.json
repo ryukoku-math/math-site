@@ -18,7 +18,6 @@
     "esbuild": "^0.28.1",
     "sharp": "^0.35.4",
     "astro": "^7.3.3",
-    "brace-expansion": "^2.1.4",
     "nanoid": "^3.3.18",
     "postcss": "^8.5.23",
     "@scalar/json-magic": {
@@ -26,6 +25,18 @@
     },
     "gray-matter": {
       "js-yaml": "^3.15.2"
+    },
+    "@vercel/cli-config": {
+      "zod": "^4.6.7"
+    },
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    },
+    "@vercel/nft": {
+      "glob": "^14.0.2"
+    },
+    "filelist": {
+      "minimatch": "^11.0.1"
     }
   }
 }
