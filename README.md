@@ -46,6 +46,26 @@ Lintやテストスイートはありません。変更内容は`npm run dev`で
 
 サイトの配信構成やNews Editorの動作に必要な環境変数は、`.env.example`を参照してください（管理者向け）。
 
+## エージェント対応
+
+サイトは Cloudflare Pages 経由で公開しており、Pages Functions の middleware
+（`functions/_middleware.js`）が whale2 上の Blume サーバーへ中継しています。Blume が生成するもの
+（`sitemap.xml`、`llms.txt`、JSON-LD、OG 画像、`<ルート>.md` の Markdown ミラー）に加えて、
+次の処理をしています。
+
+- `Accept: text/markdown` のコンテンツネゴシエーション: ページの URL で Markdown ミラーを返し、
+  `Vary: Accept` と `x-markdown-tokens`（トークン数の概算）を付けます。Markdown ミラーが無い
+  カスタムページ（`/news`・`/awards`）は HTML を返します。
+- 存在しないページを Markdown で要求された場合（存在しない `.md` URL も含む）は、
+  ステータス 404 のまま `/404.md` を返します。
+- HTML ページには、sitemap・`llms.txt`・`agent-readability.json`・API/AI カタログ・
+  `openapi.json`・そのページの Markdown ミラーを示す `Link` ヘッダーを付けます。
+- `npm run build` の最後に `scripts/fix-sitemap.mjs` が `sitemap.xml` を補正します
+  （ニュース・受賞記事を加え、`/admin/`・`/api/` を除く）。
+- `robots.txt` は `public/robots.txt` の手書きです。`Sitemap:` 行もここにあります。
+
+確認: `curl -sI -H 'Accept: text/markdown' https://www.math.ryukoku.ac.jp/`
+
 ## ライセンス
 
 このリポジトリのコンテンツとコードの権利は、龍谷大学先端理工学部数理・情報科学課程に帰属します。

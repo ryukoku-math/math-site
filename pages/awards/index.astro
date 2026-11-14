@@ -54,6 +54,10 @@ const grouped = years.map((year) => ({
   themeMode={config.theme.mode}
   searchEnabled={config.search.enabled}
   indexable={true}
+  siteUrl={config.site}
+  canonical={config.site ? new URL("/awards", config.site).href : null}
+  ogImage={config.site && config.og.enabled ? new URL("/og/awards.png", config.site).href : null}
+  ogGenerated={true}
 >
   <h1>優秀プレゼンテーション賞</h1>
   <p>

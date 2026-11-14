@@ -33,6 +33,10 @@ const posts = (await getCollection("docs"))
   themeMode={config.theme.mode}
   searchEnabled={config.search.enabled}
   indexable={true}
+  siteUrl={config.site}
+  canonical={config.site ? new URL("/news", config.site).href : null}
+  ogImage={config.site && config.og.enabled ? new URL("/og/news.png", config.site).href : null}
+  ogGenerated={true}
 >
   <h1>News</h1>
   <p>数理・情報科学課程の活動・受賞・イベントのお知らせです。</p>
