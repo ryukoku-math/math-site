@@ -52,9 +52,34 @@ gtag('config', 'G-MYSRG869PY');`,
   seo: {
     // blume の自動生成 robots.txt は「Allow: /」固定で Disallow を足せないため、
     // 生成を止めて public/robots.txt を配信する（/admin/ を除外するため）。
+    // Sitemap: 行も public/robots.txt に手書きしている。
     robots: false,
+    // JSON-LD の Organization ノード（サイトの運営主体）。WebSite・記事ノードの publisher になる
+    organization: {
+      name: "龍谷大学 先端理工学部 数理・情報科学課程",
+      logo: "/images/zero.png",
+      address: {
+        addressLocality: "大津市",
+        addressRegion: "滋賀県",
+        addressCountry: "JP",
+      },
+    },
+    og: {
+      // OG 画像の既定フォント（theme.fonts 由来の Lora/Inter）は日本語の字形を持たず、
+      // タイトルが豆腐になるため Noto Sans JP を明示する
+      fonts: [{ name: "Inter", weight: [400, 700] }, { name: "Noto Sans JP", weight: [400, 700] }],
+      palette: { accent: "#f50000" },
+      // カスタムページ（pages/*.astro）の OG 画像タイトル。未指定だと URL から "Awards" 等になる
+      titles: {
+        "/news": "News",
+        "/awards": "優秀プレゼンテーション賞",
+      },
+    },
   },
   deployment: {
+    // 公開URL。sitemap・OG画像・canonical・JSON-LD・エージェント向けマニフェストの
+    // 絶対URL化に必要（未設定だと sitemap と og:image が出力されない）。
+    site: "https://www.math.ryukoku.ac.jp",
     output: "server",
     adapter: "node",
   },
