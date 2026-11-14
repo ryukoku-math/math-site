@@ -42,9 +42,9 @@ gtag('config', 'G-MYSRG869PY');`,
   },
   theme: {
     accent: "#f50000",
-    radius: "sm",
+    radius: "none",
     fonts: {
-      display: "lora",
+      display: "figtree",
       body: "inter",
       mono: "ibm-plex-mono",
     },
