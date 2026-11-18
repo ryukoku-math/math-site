@@ -124,3 +124,33 @@
   color: var(--blume-accent);
   border-color: var(--blume-accent);
 }
+
+/* 合成案「Mix」: トップは impeccable-3（バナーに重ねた巨大な白抜きタイトル）、コンテンツは taste-1（全幅の行）、配色は taste-1-red。
+   背景は白、ホバーは薄い赤の面と赤の文字。 */
+:root { --blume-background: #fff; --blume-foreground: oklch(0.2 0.02 20); --blume-muted: oklch(0.97 0.003 25);
+  --blume-muted-foreground: oklch(0.43 0.03 20); --blume-border: oklch(0.89 0.008 25); --blume-accent: oklch(0.52 0.23 27); --blume-accent-foreground: oklch(0.99 0 0); }
+:root[data-theme="dark"] { --blume-background: oklch(0.17 0.025 20); --blume-foreground: oklch(0.95 0.008 25); --blume-muted: oklch(0.22 0.03 20);
+  --blume-muted-foreground: oklch(0.78 0.02 25); --blume-border: oklch(0.36 0.05 22); --blume-accent: oklch(0.68 0.22 27); --blume-accent-foreground: oklch(0.99 0 0); }
+/* トップ: impeccable-3 */
+html .top-banner.top-banner { height: 36rem; position: relative; }
+html .page.page { margin-top: -23rem; position: relative; z-index: 1; }
+@media (min-width: 901px) { .rail { margin-top: 23rem; } }
+#main-content .hero { border-bottom: 0; padding-bottom: 3rem; margin-bottom: 2rem; }
+#main-content h1.site-title { color: #fff; font-weight: 800; font-size: clamp(3rem, 8vw, 6rem); line-height: 1; letter-spacing: -0.04em; text-shadow: 0 2px 24px rgba(0,0,0,.45); }
+#main-content .breadcrumb, #main-content .breadcrumb a, #main-content .subtitle-en { color: rgba(255,255,255,.92); }
+#main-content .subtitle-en { margin-bottom: 0; }
+@media (max-width: 900px) { html .page.page { margin-top: -23rem; } .top-banner { height: 30rem; } }
+/* コンテンツ: taste-1 */
+#main-content h2.section-heading { font-size: 2rem; letter-spacing: -0.02em; margin-top: 1rem; }
+#main-content .nav-grid { grid-template-columns: 1fr; gap: 0; }
+#main-content .card { display: grid; grid-template-columns: minmax(14rem, 22rem) 1fr; align-items: baseline; gap: 1.5rem; background: transparent; border: 0; border-top: 1px solid var(--blume-border); border-radius: 0; padding: 1.15rem 0.75rem; box-shadow: none; transform: none; }
+#main-content .card h3 { font-size: 1.6rem; margin: 0; letter-spacing: -0.02em; }
+/* ホバー: 薄い赤の面 + 赤の文字（べた塗りの赤は使わない） */
+#main-content .card:hover { background: color-mix(in oklch, var(--blume-accent) 7%, var(--blume-background)); transform: none; box-shadow: none; }
+#main-content .card:hover h3 { color: var(--blume-accent); }
+@media (max-width: 720px) { #main-content .card { grid-template-columns: 1fr; gap: 0.25rem; } }
+#main-content .callout { border-left: 1px solid var(--blume-border); border-radius: 0; background: transparent; }
+#main-content .callout-label { text-transform: none; letter-spacing: 0; font-size: 0.9rem; }
+#main-content .access-box { border-radius: 0; background: transparent; }
+html .hero-logo-plate.hero-logo-plate { border-radius: 0; }
+:focus-visible { outline: 3px solid var(--blume-accent); outline-offset: 3px; }
